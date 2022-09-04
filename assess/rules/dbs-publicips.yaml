@@ -1,0 +1,11 @@
+name: all-publicips
+description: "Finds all public IPs of all AWS services"
+enabled: false
+services:
+  - RDS
+  - Redshift
+properties:
+  - PubliclyAccessible: true
+return:
+  - ElasticIpStatus_ElasticIp
+  - Endpoint_Address

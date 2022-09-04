@@ -1,0 +1,15 @@
+name: ec2-access
+enabled: false
+description: "Finds all users and roles with a defined set of permissions"
+find:
+  who:
+    - User
+    - Role
+  with:
+    - iam:PassRole
+    - iam:ListRoles
+    - ec2:StartInstances
+
+return:
+  - RoleName
+  - UserName

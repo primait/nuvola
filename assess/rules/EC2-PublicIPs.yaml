@@ -1,0 +1,13 @@
+name: ec2-publicips
+description: "Finds all public IPs of production EC2 instances"
+enabled: false
+services:
+  - ec2
+properties:
+  - tags:
+      - key: OS
+      - value: ubuntu
+return:
+  - InstanceId
+  - PublicIpAddress
+  - NetworkInterfaces_SecurityGroup*

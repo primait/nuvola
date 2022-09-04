@@ -1,0 +1,18 @@
+name: CloudFormation-privesc
+enabled: true
+description: "Finds all users and roles with possible privilege escalation permissions using a CloudFormation stack"
+find:
+  who:
+    - User
+    - Role
+  with:
+    - iam:PassRole
+    - cloudformation:CreateStack
+  target:
+    - policy: AdministratorAccess
+    - action: CreateRole
+    # - role: demo1-cloudformationAdmin
+
+return:
+  - RoleName
+  - UserName

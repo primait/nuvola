@@ -1,0 +1,7 @@
+*.code-workspace
+nuvola
+*.json
+.env
+dist
+*.log
+backup/

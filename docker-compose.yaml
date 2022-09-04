@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  neo4j:
+    image: neo4j:latest
+    hostname: neo4j
+    container_name: neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - logs:/logs/
+      - nuvoladb:/data
+      - ./backup:/backup:rw
+    environment:
+      NEO4JLABS_PLUGINS: '["apoc"]'
+      NEO4J_AUTH: $NEO4J_AUTH
+      NEO4J_dbms_logs_debug_level: "INFO"
+      NEO4J_dbms_memory_heap_initial__size: 12G
+      NEO4J_dbms_memory_heap_max__size: 16G
+      NEO4J_dbms_memory_pagecache_size: 12G
+      NEO4J_dbms_jvm_additional: "-XX:+ExitOnOutOfMemoryError"
+      NEO4J_dbms_default__database: "nuvoladb"
+      NEO4J_apoc_export_file_enabled: "true"
+      NEO4J_cypher_forbid__shortestpath__common__nodes: "false"
+
+volumes:
+  nuvoladb:
+  logs:

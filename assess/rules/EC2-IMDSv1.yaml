@@ -1,0 +1,12 @@
+name: ec2-IMDS
+enabled: true
+description: "Finds all EC2 with IMDSv1 enabled"
+services:
+  - ec2
+properties:
+  - MetadataOptions:
+      - HttpTokens: "optional"
+return:
+  - InstanceId
+  - Tag
+  - IamInstanceProfile
