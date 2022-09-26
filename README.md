@@ -84,6 +84,12 @@ No data is sent or shared with Prima Assicurazioni.
 - creating new rules
 - improving the overall quality
 
+## Presentations
+
+- RomHack 2022
+  - [Slides](https://github.com/primait/nuvola/tree/master/assets/slides/RomHack_2022-You_shall_not_PassRole.pdf)
+  - [Demos](https://github.com/primait/nuvola/tree/master/assets/demos/)
+
 ## License
 
 nuvola uses graph theory to reveal possible attack paths and security misconfigurations on cloud environments.
