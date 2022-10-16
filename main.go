@@ -7,58 +7,44 @@ import (
 
 	"os"
 
-	assess "nuvola/assess/aws"
-	awsconfig "nuvola/config/aws"
-	dump "nuvola/dump/aws"
-	"nuvola/enumerate"
-	cmdflags "nuvola/io/cli/input"
-	neo4jClient "nuvola/io/neo4j"
-
-	"github.com/joho/godotenv"
+	"nuvola/connector"
+	"nuvola/controller/assess"
+	"nuvola/controller/dump"
+	"nuvola/controller/enumerate"
+	"nuvola/tools/cli/input/cmdflags"
+	clioutput "nuvola/tools/cli/output"
 )
 
 func main() {
 	start := time.Now()
-	var err error
-
 	// Parse command line flags
 	cmdflags.InitFlags()
 
-	// Load .env
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	neo4jUrl := os.Getenv("NEO4J_URL")
-	neo4jUsername := "neo4j"
-	neo4jPassword := os.Getenv("PASSWORD")
-
 	switch os.Args[1] {
 	case "dump":
-		connector, err := neo4jClient.Connect(neo4jUrl, neo4jUsername, neo4jPassword)
-		// A Fresh dump is performed
-		connector.DeleteAll()
+		cloudConnector, err := connector.NewCloudConnector(cmdflags.AWS_PROFILE)
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatalf(err.Error())
 		}
-		awsConfig := awsconfig.InitAWSConfiguration(cmdflags.AWS_PROFILE)
 		if cmdflags.DUMP_ONLY {
-			dump.DumpData(awsConfig, nil)
+			dump.DumpData(nil, cloudConnector)
 		} else {
-			dump.DumpData(awsConfig, &connector)
+			clioutput.PrintRed("Flushing Neo4j database")
+			storageConnector := connector.NewStorageConnector().FlushAll()
+			dump.DumpData(storageConnector, cloudConnector)
 		}
+		dump.SaveResults(cmdflags.AWS_PROFILE, cmdflags.OUTPUT_DIR, cmdflags.OUTPUT_FORMAT)
 	case "assess":
-		connector, err := neo4jClient.Connect(neo4jUrl, neo4jUsername, neo4jPassword)
-		if err != nil {
-			log.Fatalln(err)
-		}
+		connector.SetActions()
+		storageConnector := connector.NewStorageConnector()
 		// NO_IMPORT is false so import data from INPUT_FILE first
 		if cmdflags.IMPORT_FILE != "" && !cmdflags.NO_IMPORT {
-			connector.DeleteAll()
-			assess.ImportZipFile(&connector, cmdflags.IMPORT_FILE)
+			clioutput.PrintRed("Flushing all database")
+			clioutput.PrintGreen(fmt.Sprintf("Importing %s", cmdflags.IMPORT_FILE))
+			assess.ImportZipFile(storageConnector, cmdflags.IMPORT_FILE)
 		}
 
-		assess.YamlRunner(&connector)
+		assess.Assess(storageConnector, "./controller/assess/rules/")
 	case "enumerate":
 		enumerate.Enumerate()
 		os.Exit(1)

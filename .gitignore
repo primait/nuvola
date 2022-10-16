@@ -1,6 +1,7 @@
 *.code-workspace
 nuvola
 *.json
+!.vscode/*.json
 .env
 dist
 *.log

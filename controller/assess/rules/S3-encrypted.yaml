@@ -1,0 +1,11 @@
+name: s3-encrypted
+enabled: true
+description: "Finds all buckets without encryption enabled"
+services:
+  - S3
+  - Group # intended
+properties:
+  - Encrypted: false
+return:
+  - Name
+  - Encrypted
