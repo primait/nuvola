@@ -1,8 +1,6 @@
 name: golangci-lint
 on:
   push:
-    tags:
-      - v*
     branches:
       - master
       - dev
@@ -24,4 +22,4 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          args: --timeout 100s --skip-dirs="(^|/)assets($|/)"
+          args: --timeout 100s --skip-dirs="(^|/)assets($|/)" --enable misspell --enable gofmt --enable goimports --enable whitespace
