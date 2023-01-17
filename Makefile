@@ -15,7 +15,7 @@ endef
 
 
 start:
-	@if [ ! -f ./env ]; then\
+	@if [ ! -f ./.env ]; then\
 	  cp .env_example .env;\
 	fi
 	docker-compose up -d
