@@ -102,7 +102,8 @@ type Statement struct {
 	Sid       string      `json:"Sid,omitempty"`
 	Effect    string      `json:"Effect"`
 	Principal *Principal  `json:"Principal,omitempty"`
-	Action    interface{} `json:"Action"`
+	Action    interface{} `json:"Action,omitempty"`
+	NotAction interface{} `json:"NotAction,omitempty"`
 	Resource  interface{} `json:"Resource,omitempty"`
 	Condition interface{} `json:"Condition,omitempty"`
 }

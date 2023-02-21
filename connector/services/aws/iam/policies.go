@@ -224,31 +224,57 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 
 func expandActions(policy *PolicyDocument, identity any) {
 	for i, statement := range policy.Statement {
-		var realAction []string
+		var realActions []string
 
-		switch v := statement.Action.(type) {
-		case []interface{}:
-			// list of Actions
-			for _, action := range statement.Action.([]interface{}) {
-				realAction = append(realAction, getActionsStartingWith(action.(string))...)
+		if statement.Action != nil {
+			switch v := statement.Action.(type) {
+			case []interface{}:
+				// list of Actions
+				for _, action := range statement.Action.([]interface{}) {
+					realActions = append(realActions, getActionsStartingWith(action.(string))...)
+				}
+			case string:
+				// single Action
+				realActions = append(realActions, getActionsStartingWith(v)...)
+			default:
+				policyJSON, _ := json.Marshal(policy)
+				nuvolaerror.HandleError(
+					nil,
+					"IAM - Policies",
+					fmt.Sprintf("expandActions\nError: wrong syntax on policy statement %v\nPlease check your policies for \"%v\" principal or open an issue\ntype: %v",
+						string(policyJSON),
+						identity,
+						v),
+					false)
 			}
-		case string:
-			// single Action
-			realAction = append(realAction, getActionsStartingWith(v)...)
-		default:
-			policyJSON, _ := json.Marshal(policy)
-			nuvolaerror.HandleError(
-				nil,
-				"IAM - Policies",
-				fmt.Sprintf("expandActions\nError: wrong syntax on policy statement %v\nPlease check your policies for \"%v\" principal or open an issue\ntype: %v",
-					string(policyJSON),
-					identity,
-					v),
-				false)
+		}
+
+		if statement.NotAction != nil {
+			realActions = ActionsList
+			switch v := statement.NotAction.(type) {
+			case []interface{}:
+				// list of Actions
+				for _, action := range statement.NotAction.([]interface{}) {
+					realActions = removeFromList(realActions, getActionsStartingWith(action.(string)))
+				}
+			case string:
+				// single Action
+				realActions = removeFromList(realActions, getActionsStartingWith(v))
+			default:
+				policyJSON, _ := json.Marshal(policy)
+				nuvolaerror.HandleError(
+					nil,
+					"IAM - Policies",
+					fmt.Sprintf("expandActions\nError: wrong syntax on policy statement %v\nPlease check your policies for \"%v\" principal or open an issue\ntype: %v",
+						string(policyJSON),
+						identity,
+						v),
+					false)
+			}
 		}
 
 		// Update the struct in place
-		policy.Statement[i].Action = unique(realAction)
+		policy.Statement[i].Action = unique(realActions)
 	}
 }
 
@@ -273,7 +299,23 @@ func getActionsStartingWith(fullAction string) (actions []string) {
 		}
 	}
 
-	return unique(actions)
+	return actions
+}
+
+func removeFromList[T comparable](a []T, b []T) []T {
+	out := make([]T, 0)
+	for _, aElem := range a {
+		toAdd := true
+		for _, bElem := range b {
+			if aElem == bElem {
+				toAdd = false
+			}
+		}
+		if toAdd {
+			out = append(out, aElem)
+		}
+	}
+	return out
 }
 
 func unique(slice []string) []string {
