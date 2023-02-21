@@ -4,9 +4,13 @@ on:
     branches:
       - master
       - dev
+    paths:
+      - '**.go'
   pull_request:
     branches:
       - master
+    paths:
+      - '**.go'
 jobs:
   gosec:
     runs-on: ubuntu-latest
