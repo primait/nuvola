@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	connector "nuvola/connector"
@@ -47,7 +48,11 @@ func ImportZipFile(connector *connector.StorageConnector, zipfile string) {
 		if err != nil {
 			nuvolaerror.HandleError(err, "Assess", "Opening content of ZIP")
 		}
-		defer rc.Close()
+		defer func() {
+			if err := rc.Close(); err != nil {
+				log.Printf("error closing resource: %s", err)
+			}
+		}()
 
 		buf := new(bytes.Buffer)
 		_, err = io.Copy(buf, rc) // #nosecG110

@@ -3,12 +3,14 @@ package connector
 import (
 	"errors"
 	awsconfig "nuvola/connector/services/aws"
+	"os"
 	"strings"
 )
 
 func NewCloudConnector(profile string) (*CloudConnector, error) {
+	awsEndpoint := os.Getenv("AWS_ENDPOINT")
 	cc := &CloudConnector{
-		AWSConfig: awsconfig.InitAWSConfiguration(profile),
+		AWSConfig: awsconfig.InitAWSConfiguration(profile, awsEndpoint),
 	}
 	if !cc.testConnection("aws") {
 		return nil, errors.New("invalid credentials or expired session")

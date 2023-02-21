@@ -236,7 +236,8 @@ func expandActions(policy *PolicyDocument) {
 			// single Action
 			realAction = append(realAction, getActionsStartingWith(v)...)
 		default:
-			nuvolaerror.HandleError(nil, "IAM - Policies", fmt.Sprintf("expandActions: %v %v\n", policy, v))
+			policyJSON, _ := json.Marshal(policy)
+			nuvolaerror.HandleError(nil, "IAM - Policies", fmt.Sprintf("expandActions: %v \ntype: %v\n", string(policyJSON), v))
 		}
 
 		// Update the struct

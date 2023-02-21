@@ -23,11 +23,26 @@ var (
 	countRetries = 100
 )
 
-func InitAWSConfiguration(profile string) (awsc AWSConfig) {
+func InitAWSConfiguration(profile string, awsEndpoint string) (awsc AWSConfig) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if awsEndpoint != "" {
+			return aws.Endpoint{
+				PartitionID: "aws",
+				URL:         awsEndpoint,
+			}, nil
+		}
+
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
 	// Load the Shared AWS Configuration (~/.aws/config)
-	cfg, _ := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile(profile), config.WithRetryer(func() aws.Retryer {
-		return retry.AddWithMaxAttempts(retry.NewStandard(), countRetries)
-	}))
+	cfg, _ := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile(profile),
+		config.WithRetryer(func() aws.Retryer {
+			return retry.AddWithMaxAttempts(retry.NewStandard(), countRetries)
+		}),
+		config.WithEndpointResolverWithOptions(customResolver),
+	)
 	cfg.RetryMode = aws.RetryModeStandard
 	awsc = AWSConfig{Profile: profile, Config: cfg}
 	SetActions()

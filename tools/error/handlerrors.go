@@ -21,6 +21,7 @@ func HandleAWSError(err *http.ResponseError, service string, operation string) {
 }
 
 func HandleError(err error, service string, operation string) {
-	fmt.Println(runtime.Caller(1))
-	log.Fatalf("Service: %s, Operation: %s, Error: %s", service, operation, err.Error())
+	_, file, line, _ := runtime.Caller(1)
+	fmt.Printf("Error pointer: %s:%d\n", file, line)
+	log.Fatalf("Service: %s, Operation: %s, Error: %s", service, operation, err)
 }
