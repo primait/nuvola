@@ -20,8 +20,12 @@ func HandleAWSError(err *http.ResponseError, service string, operation string) {
 	}
 }
 
-func HandleError(err error, service string, operation string) {
+func HandleError(err error, service string, operation string, exitonError ...bool) {
 	_, file, line, _ := runtime.Caller(1)
 	fmt.Printf("Error pointer: %s:%d\n", file, line)
-	log.Fatalf("Service: %s, Operation: %s, Error: %s", service, operation, err)
+	if len(exitonError) >= 1 && !exitonError[0] {
+		log.Printf("Service: %s, Operation: %s, Error: %s\n", service, operation, err)
+	} else {
+		log.Fatalf("Service: %s, Operation: %s, Error: %s\n", service, operation, err)
+	}
 }

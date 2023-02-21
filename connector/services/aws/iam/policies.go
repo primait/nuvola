@@ -121,7 +121,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 		}
 		policyVersionDocument.PolicyName = policies[i]
 		policyVersionDocument.Validation = ic.ValidatePolicy(decodedValue)
-		expandActions(&policyVersionDocument)
+		expandActions(&policyVersionDocument, identity)
 		attached = append(attached, policyVersionDocument)
 	}
 
@@ -210,7 +210,7 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 			nuvolaerror.HandleError(errj, "IAM - Policies", "Umarshalling policyVersions[0].Document")
 		}
 
-		expandActions(&policyVersions[0].Document)
+		expandActions(&policyVersions[0].Document, identity)
 		findings := ic.ValidatePolicy(string(policyDocument))
 		attached = append(attached, AttachedPolicies{
 			AttachedPolicy: policy,
@@ -222,7 +222,7 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 	return
 }
 
-func expandActions(policy *PolicyDocument) {
+func expandActions(policy *PolicyDocument, identity any) {
 	for i, statement := range policy.Statement {
 		var realAction []string
 
@@ -237,10 +237,17 @@ func expandActions(policy *PolicyDocument) {
 			realAction = append(realAction, getActionsStartingWith(v)...)
 		default:
 			policyJSON, _ := json.Marshal(policy)
-			nuvolaerror.HandleError(nil, "IAM - Policies", fmt.Sprintf("expandActions: %v \ntype: %v\n", string(policyJSON), v))
+			nuvolaerror.HandleError(
+				nil,
+				"IAM - Policies",
+				fmt.Sprintf("expandActions\nError: wrong syntax on policy statement %v\nPlease check your policies for \"%v\" principal or open an issue\ntype: %v",
+					string(policyJSON),
+					identity,
+					v),
+				false)
 		}
 
-		// Update the struct
+		// Update the struct in place
 		policy.Statement[i].Action = unique(realAction)
 	}
 }
