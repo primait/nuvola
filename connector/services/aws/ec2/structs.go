@@ -47,9 +47,12 @@ func ListAndSaveRegions(cfg aws.Config) {
 		if errors.As(err, &re) {
 			nuvolaerror.HandleError(err, "EC2", "ListAndSaveRegions")
 		}
-
-		for _, region := range output.Regions {
-			Regions = append(Regions, aws.ToString(region.RegionName))
+		if output == nil {
+			nuvolaerror.HandleError(errors.New("invalid profile or credentials"), "EC2", "ListAndSaveRegions")
+		} else {
+			for _, region := range output.Regions {
+				Regions = append(Regions, aws.ToString(region.RegionName))
+			}
 		}
 	}
 }
