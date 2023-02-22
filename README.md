@@ -27,11 +27,13 @@ The usage of a graph database also increases the possibility of finding differen
 git clone --depth=1 https://github.com/primait/nuvola.git; cd nuvola
 ```
 
-2. Create and edit, if required, the `.env` file to set your DB username/password/URL
+2. Create and **edit**, if required, the `.env` file to set your DB username/password/URL
 
 ```bash
 cp .env_example .env;
 ```
+
+You may need to edit the size of the memory allocated to Neo4j in you run the tool in a low-RAM device.
 
 3. Start the Neo4j docker instance
 

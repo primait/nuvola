@@ -15,9 +15,9 @@ services:
     environment:
       NEO4J_PLUGINS: '["apoc"]'
       NEO4J_AUTH: $NEO4J_AUTH
-      NEO4J_server_memory_heap_initial__size: 12G
-      NEO4J_server_memory_heap_max__size: 16G
-      NEO4J_server_memory_pagecache_size: 12G
+      NEO4J_server_memory_heap_initial__size: ${NEO4J_server_memory_heap_initial__size}
+      NEO4J_server_memory_heap_max__size: ${NEO4J_server_memory_heap_max__size}
+      NEO4J_server_memory_pagecache_size: ${NEO4J_server_memory_pagecache_size}
       NEO4J_server_jvm_additional: "-XX:+ExitOnOutOfMemoryError"
       NEO4J_initial_dbms_default__database: "nuvoladb"
       NEO4J_dbms_cypher_forbid__shortestpath__common__nodes: "false"
