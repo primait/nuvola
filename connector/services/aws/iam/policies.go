@@ -44,7 +44,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 		policyVersionDocument = PolicyDocument{}
 		policies              []string
 		decodedValue          string
-		attached              []PolicyDocument
+		inline                []PolicyDocument
 	)
 
 	switch {
@@ -122,10 +122,10 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 		policyVersionDocument.PolicyName = policies[i]
 		policyVersionDocument.Validation = ic.ValidatePolicy(decodedValue)
 		expandActions(&policyVersionDocument, identity)
-		attached = append(attached, policyVersionDocument)
+		inline = append(inline, policyVersionDocument)
 	}
 
-	return attached
+	return inline
 }
 
 // aws iam list-policy-versions

@@ -27,10 +27,12 @@ type EnumAWSTypes interface {
 
 var actionResourceRelations []map[string]string
 
-func parseResources(resources any, service, action, policy string) {
+func parseResources(resources any, service, action, policy, principal string) {
+	replacer := strings.NewReplacer("${aws:username}", principal, "${", "", "}", "")
 	switch v := resources.(type) {
 	case []interface{}:
 		for _, resource := range v {
+			resource = replacer.Replace(resource.(string))
 			arned, _ := arner.ParseARN(resource.(string))
 			itemAR := make(map[string]string)
 			itemAR["arn"] = resource.(string)
@@ -41,6 +43,7 @@ func parseResources(resources any, service, action, policy string) {
 			actionResourceRelations = append(actionResourceRelations, itemAR)
 		}
 	case string:
+		v = replacer.Replace(v)
 		arned, _ := arner.ParseARN(v)
 		itemAR := make(map[string]string)
 		itemAR["arn"] = v
@@ -52,7 +55,7 @@ func parseResources(resources any, service, action, policy string) {
 	}
 }
 
-func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]servicesIAM.Statement) {
+func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]servicesIAM.Statement, principal string) {
 	// Prepare the map for the UNWIND syntax
 	actions := make(map[string]interface{})
 	actions["actions"] = make([]map[string]string, 0)
@@ -73,7 +76,7 @@ func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]s
 					item["action"] = action
 					item["policy"] = fmt.Sprint(idPolicy)
 					items = append(items, item)
-					parseResources(statement.Resource, service, action, strconv.Itoa(int(idPolicy)))
+					parseResources(statement.Resource, service, action, strconv.Itoa(int(idPolicy)), principal)
 				}
 			case string:
 				// single Action
@@ -85,9 +88,9 @@ func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]s
 				item["action"] = action
 				item["policy"] = fmt.Sprint(idPolicy)
 				items = append(items, item)
-				parseResources(statement.Resource, service, action, strconv.Itoa(int(idPolicy)))
+				parseResources(statement.Resource, service, action, strconv.Itoa(int(idPolicy)), principal)
 			default:
-				nuvolaerror.HandleError(nil, "Neo4j", "createPolicyRelationships - case not implemented")
+				nuvolaerror.HandleError(nil, "Neo4j", fmt.Sprintf("createPolicyRelationships - case not implemented for %v of type: %v", statement.Action, v))
 			}
 
 			// Append all actions of this statement to the UNWIND map

@@ -24,12 +24,12 @@ func (nc *Neo4jClient) AddUsers(users *[]servicesIAM.User) {
 		idUser := nc.createUser(&(*users)[i])
 		for _, inlinePolicy := range (*users)[i].InlinePolicies {
 			idPolicy := nc.createPolicyUser(idUser, "", inlinePolicy.PolicyName, "inline")
-			nc.createPolicyRelationships(idPolicy, &inlinePolicy.Statement)
+			nc.createPolicyRelationships(idPolicy, &inlinePolicy.Statement, *(*users)[i].UserName)
 		}
 
 		for _, attachedPolicy := range (*users)[i].AttachedPolicies {
 			idPolicy := nc.createPolicyUser(idUser, *attachedPolicy.PolicyArn, *attachedPolicy.PolicyName, "attached")
-			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement)
+			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement, *(*users)[i].UserName)
 		}
 	}
 }
@@ -39,12 +39,12 @@ func (nc *Neo4jClient) AddGroups(groups *[]servicesIAM.Group) {
 		idGroup := nc.createGroup(&(*groups)[i])
 		for _, inlinePolicy := range (*groups)[i].InlinePolicies {
 			idPolicy := nc.createPolicyGroup(idGroup, "", inlinePolicy.PolicyName, "inline")
-			nc.createPolicyRelationships(idPolicy, &inlinePolicy.Statement)
+			nc.createPolicyRelationships(idPolicy, &inlinePolicy.Statement, *(*groups)[i].GroupName)
 		}
 
 		for _, attachedPolicy := range (*groups)[i].AttachedPolicies {
 			idPolicy := nc.createPolicyGroup(idGroup, *attachedPolicy.PolicyArn, *attachedPolicy.PolicyName, "attached")
-			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement)
+			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement, *(*groups)[i].GroupName)
 		}
 	}
 }
@@ -54,12 +54,12 @@ func (nc *Neo4jClient) AddRoles(roles *[]servicesIAM.Role) {
 		idRole := nc.createRole(&(*roles)[i])
 		for _, inlinePolicy := range (*roles)[i].InlinePolicies {
 			idPolicy := nc.createPolicyRole(idRole, "", inlinePolicy.PolicyName, "inline")
-			nc.createPolicyRelationships(idPolicy, &inlinePolicy.Statement)
+			nc.createPolicyRelationships(idPolicy, &inlinePolicy.Statement, *(*roles)[i].RoleName)
 		}
 
 		for _, attachedPolicy := range (*roles)[i].AttachedPolicies {
 			idPolicy := nc.createPolicyRole(idRole, *attachedPolicy.PolicyArn, *attachedPolicy.PolicyName, "attached")
-			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement)
+			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement, *(*roles)[i].RoleName)
 		}
 	}
 }
@@ -416,7 +416,7 @@ func (nc *Neo4jClient) AddLinksToResourcesIAM() {
 	})
 
 	if err != nil {
-		nuvolaerror.HandleError(err, "Neo4j - AddLinksToResourcesIAM", fmt.Sprintf("Error on executing query %s", query))
+		nuvolaerror.HandleError(err, "Neo4j - AddLinksToResourcesIAM", fmt.Sprintf("Error on executing query %s with %v", query, out))
 	}
 }
 

@@ -133,7 +133,7 @@ var IAMActionResourceMap = map[string]string{
 	"ListPolicyTags":                            "Policy",
 	"ListPolicyVersions":                        "Policy",
 	"ListRolePolicies":                          "Role",
-	"ListRoles":                                 "",
+	"ListRoles":                                 "Role",
 	"ListRoleTags":                              "Role",
 	"ListSAMLProviders":                         "",
 	"ListSAMLProviderTags":                      "saml-provider*",
