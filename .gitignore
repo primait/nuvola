@@ -3,6 +3,7 @@ nuvola
 *.json
 !.vscode/*.json
 .env
+!tests/.env
 dist
 *.log
 backup/
