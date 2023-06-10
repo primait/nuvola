@@ -8,6 +8,7 @@ import (
 	nuvolaerror "nuvola/tools/error"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 )
 
@@ -18,15 +19,15 @@ type Neo4jClient struct {
 
 var logLevel = neo4j.LogLevel(neo4j.WARNING)
 
-var useConsoleLogger = func(level neo4j.LogLevel) func(config *neo4j.Config) {
-	return func(config *neo4j.Config) {
+var useConsoleLogger = func(level neo4j.LogLevel) func(config *config.Config) {
+	return func(config *config.Config) {
 		config.Log = neo4j.ConsoleLogger(level)
 	}
 }
 
 func Connect(url, username, password string) (*Neo4jClient, error) {
 	nc := &Neo4jClient{}
-	nc.Driver, nc.err = neo4j.NewDriverWithContext(url, neo4j.BasicAuth(username, password, ""), useConsoleLogger(logLevel), func(c *neo4j.Config) {
+	nc.Driver, nc.err = neo4j.NewDriverWithContext(url, neo4j.BasicAuth(username, password, ""), useConsoleLogger(logLevel), func(c *config.Config) {
 		c.SocketConnectTimeout = 5 * time.Second
 		c.MaxConnectionLifetime = 30 * time.Minute
 		// c.ConnectionAcquisitionTimeout = 5 * time.Second

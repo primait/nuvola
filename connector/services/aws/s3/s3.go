@@ -95,7 +95,9 @@ func (sc *S3Client) getBucketPolicy(bucket *string) (policy s3PolicyDocument) {
 	if output != nil {
 		err := json.Unmarshal([]byte(aws.ToString(output.Policy)), &policy)
 		if err != nil {
-			nuvolaerror.HandleError(err, "S3", "getBucketPolicy")
+			if err.Error() != "invalid character '<' looking for beginning of value" { // TODO: https://github.com/localstack/localstack/issues/8475
+				nuvolaerror.HandleError(err, "S3", "getBucketPolicy")
+			}
 		}
 	}
 	return

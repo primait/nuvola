@@ -22,7 +22,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "dump":
-		cloudConnector, err := connector.NewCloudConnector(cmdflags.AWS_PROFILE)
+		cloudConnector, err := connector.NewCloudConnector(cmdflags.AWS_PROFILE, cmdflags.AWS_ENDPOINT_URL)
 		if err != nil {
 			log.Fatalf(err.Error())
 		}

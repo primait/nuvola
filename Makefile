@@ -46,3 +46,7 @@ backup:
 .PHONY: restore
 restore:
 	@cat ./backup/all.cypher | docker-compose exec -T neo4j cypher-shell -u neo4j -p ${PASSWORD} -d nuvoladb --non-interactive
+
+.PHONY: tests
+tests: start build
+	$(MAKE) -C tests all

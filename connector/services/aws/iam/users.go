@@ -25,21 +25,23 @@ func ListUsers(cfg aws.Config, credentialReport map[string]*CredentialReport) (u
 		wg  sync.WaitGroup
 	)
 
-	rootAccount := credentialReport["<root_account>"]
-	rootDate, _ := time.Parse("2006-01-02T15:04:05+00:00", rootAccount.UserCreation)
-	rootUsedDate, _ := time.Parse("2006-01-02T15:04:05+00:00", rootAccount.PasswordLastUsed)
-	users = append(users, &User{
-		User: types.User{
-			UserName:         &rootAccount.User,
-			Arn:              &rootAccount.Arn,
-			CreateDate:       &rootDate,
-			PasswordLastUsed: &rootUsedDate,
-			UserId:           aws.String("0"),
-		},
-		PasswordEnabled:     rootAccount.PasswordEnabled,
-		PasswordLastChanged: rootAccount.PasswordLastChanged,
-		MfaActive:           rootAccount.MfaActive,
-	})
+	if len(credentialReport) > 0 {
+		rootAccount := credentialReport["<root_account>"]
+		rootDate, _ := time.Parse("2006-01-02T15:04:05+00:00", rootAccount.UserCreation)
+		rootUsedDate, _ := time.Parse("2006-01-02T15:04:05+00:00", rootAccount.PasswordLastUsed)
+		users = append(users, &User{
+			User: types.User{
+				UserName:         &rootAccount.User,
+				Arn:              &rootAccount.Arn,
+				CreateDate:       &rootDate,
+				PasswordLastUsed: &rootUsedDate,
+				UserId:           aws.String("0"),
+			},
+			PasswordEnabled:     rootAccount.PasswordEnabled,
+			PasswordLastChanged: rootAccount.PasswordLastChanged,
+			MfaActive:           rootAccount.MfaActive,
+		})
+	}
 
 	for _, user := range listUsers() {
 		wg.Add(1)
