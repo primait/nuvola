@@ -19,7 +19,7 @@ import (
 
 func ListBuckets(cfg aws.Config) (buckets []*Bucket) {
 	var (
-		s3Client = S3Client{Config: cfg, client: s3.NewFromConfig(cfg)}
+		s3Client = S3Client{Config: cfg, client: s3.NewFromConfig(cfg, func(o *s3.Options) { o.UsePathStyle = true })}
 		mu       = &sync.Mutex{}
 		sem      = semaphore.NewWeighted(int64(15))
 		wg       sync.WaitGroup
@@ -95,9 +95,7 @@ func (sc *S3Client) getBucketPolicy(bucket *string) (policy s3PolicyDocument) {
 	if output != nil {
 		err := json.Unmarshal([]byte(aws.ToString(output.Policy)), &policy)
 		if err != nil {
-			if err.Error() != "invalid character '<' looking for beginning of value" { // TODO: https://github.com/localstack/localstack/issues/8475
-				nuvolaerror.HandleError(err, "S3", "getBucketPolicy")
-			}
+			nuvolaerror.HandleError(err, "S3", "getBucketPolicy")
 		}
 	}
 	return

@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"errors"
-	"fmt"
 	"nuvola/connector/services/aws/ec2"
 	nuvolaerror "nuvola/tools/error"
 
@@ -42,7 +41,6 @@ func (rc *RDSClient) listRDSClustersForRegion() (clusters []types.DBCluster) {
 	}
 
 	if output != nil {
-		fmt.Println(output.DBClusters)
 		for i := 0; i < len(output.DBClusters); i++ {
 			clusters = append(clusters, output.DBClusters[i])
 		}
