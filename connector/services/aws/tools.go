@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/imroc/req/v3"
+	req "github.com/imroc/req/v3"
 	"github.com/itchyny/gojq"
 	"github.com/ohler55/ojg/oj"
 )
