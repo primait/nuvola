@@ -6,7 +6,12 @@ This folder also contains the dumped archive file from nuvola to ease the ingest
 
 ## Usage
 
-- `docker-compose up`
-- `pipenv shell`
-- `awslocal sts get-caller-identity` to test if the environment is ready
-- `tflocal apply`
+From the root directory of `nuvola` run `make tests`.
+
+The Makefile will:
+
+1. start up Neo4j docker instance
+2. start up Localstack docker instance
+3. load a Pipenv environment
+4. using Terraform creates a mock environment
+5. `nuvola` will dump the infrastructure
