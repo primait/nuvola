@@ -19,7 +19,7 @@ import (
 
 func ListBuckets(cfg aws.Config) (buckets []*Bucket) {
 	var (
-		s3Client = S3Client{Config: cfg, client: s3.NewFromConfig(cfg)}
+		s3Client = S3Client{Config: cfg, client: s3.NewFromConfig(cfg, func(o *s3.Options) { o.UsePathStyle = true })}
 		mu       = &sync.Mutex{}
 		sem      = semaphore.NewWeighted(int64(15))
 		wg       sync.WaitGroup

@@ -9,6 +9,7 @@ import (
 )
 
 var AWS_PROFILE string
+var AWS_ENDPOINT_URL string
 var OUTPUT_DIR string
 var OUTPUT_FORMAT string
 var IMPORT_FILE string
@@ -20,7 +21,8 @@ func InitFlags() {
 	allowedFormat := map[string]bool{"zip": true, "json": true}
 
 	dumpFlagSet := flag.NewFlagSet("dump", flag.ExitOnError)
-	dumpFlagSet.StringVar(&AWS_PROFILE, "profile", "default", "AWS profile to use")
+	dumpFlagSet.StringVar(&AWS_ENDPOINT_URL, "endpoint-url", "", "AWS endpoint URL to use (e.g. for LocalStack)")
+	dumpFlagSet.StringVar(&AWS_PROFILE, "profile", "", "AWS profile to use")
 	dumpFlagSet.StringVar(&OUTPUT_DIR, "outputdir", "", "Output folder where the files will be saved (default: \".\")")
 	dumpFlagSet.StringVar(&OUTPUT_FORMAT, "format", "zip", "Output format: ZIP or json files")
 	dumpFlagSet.BoolVar(&DUMP_ONLY, "dump-only", false, "Flag to prevent loading data into Neo4j (default: \"false\")")

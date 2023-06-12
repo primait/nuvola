@@ -1,14 +1,14 @@
 variable "name" {
   type        = string
-  description = "the name of the stack, e.g. \"demo\""
+  description = "the name of the stack, e.g. \"test\""
 }
 
-variable "vulnerable_lambda_role" {
+variable "lambda_1_role" {
   type        = string
   description = "role for the vulnerable Lambda"
 }
 
-variable "dummy_lambda_role" {
+variable "lambda_2_role" {
   type        = string
   description = "role for the dummy Lambda"
 }

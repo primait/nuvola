@@ -48,6 +48,9 @@ func DumpData(storageConnector *connector.StorageConnector, cloudConnector *conn
 }
 
 func SaveResults(awsProfile string, outputDir string, outputFormat string) {
+	if awsProfile == "" {
+		awsProfile = "default"
+	}
 	if outputFormat == "zip" {
 		zip.Zip(outputDir, awsProfile, &AWSResults)
 	}

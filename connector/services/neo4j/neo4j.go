@@ -8,6 +8,7 @@ import (
 	nuvolaerror "nuvola/tools/error"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 )
 
@@ -18,18 +19,17 @@ type Neo4jClient struct {
 
 var logLevel = neo4j.LogLevel(neo4j.WARNING)
 
-var useConsoleLogger = func(level neo4j.LogLevel) func(config *neo4j.Config) {
-	return func(config *neo4j.Config) {
+var useConsoleLogger = func(level neo4j.LogLevel) func(config *config.Config) {
+	return func(config *config.Config) {
 		config.Log = neo4j.ConsoleLogger(level)
 	}
 }
 
 func Connect(url, username, password string) (*Neo4jClient, error) {
 	nc := &Neo4jClient{}
-	nc.Driver, nc.err = neo4j.NewDriverWithContext(url, neo4j.BasicAuth(username, password, ""), useConsoleLogger(logLevel), func(c *neo4j.Config) {
+	nc.Driver, nc.err = neo4j.NewDriverWithContext(url, neo4j.BasicAuth(username, password, ""), useConsoleLogger(logLevel), func(c *config.Config) {
 		c.SocketConnectTimeout = 5 * time.Second
 		c.MaxConnectionLifetime = 30 * time.Minute
-		// c.ConnectionAcquisitionTimeout = 5 * time.Second
 	})
 	if nc.err != nil {
 		return &Neo4jClient{}, nc.err
@@ -48,7 +48,7 @@ func (nc *Neo4jClient) DeleteAll() {
 	session := nc.NewSession()
 	defer session.Close(context.TODO())
 
-	session.Run(context.TODO(), `call apoc.periodic.commit("MATCH (n) WITH n LIMIT $limit DETACH DELETE n RETURN count(*)", {limit:10000})`, nil)
+	session.Run(context.TODO(), `call apoc.periodic.commit("MATCH (n) WITH n LIMIT $limit DETACH DELETE n RETURN count(*)", {limit:20000})`, nil)
 	session.Run(context.TODO(), "CALL apoc.schema.assert({},{})", nil)
 	session.Run(context.TODO(), "CALL apoc.trigger.removeAll()", nil)
 
@@ -65,7 +65,7 @@ func (nc *Neo4jClient) DeleteAll() {
 	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (r:Rds) ASSERT r.DBClusterArn IS UNIQUE", nil)
 	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (r:Rds) ASSERT r.DBInstanceArn IS UNIQUE", nil)
 
-	session.Run(context.TODO(), "CREATE INDEX index_Group IF NOT EXISTS FOR (g:User) ON g.UserName", nil)
+	session.Run(context.TODO(), "CREATE INDEX index_User IF NOT EXISTS FOR (u:User) ON u.UserName", nil)
 
 	session.Run(context.TODO(), "CREATE INDEX index_Role IF NOT EXISTS FOR (r:Role) ON r.RoleName", nil)
 	session.Run(context.TODO(), "CREATE INDEX index_RoleInstanceProfileArn IF NOT EXISTS FOR (r:Role) ON r.InstanceProfileArn", nil)
@@ -73,7 +73,6 @@ func (nc *Neo4jClient) DeleteAll() {
 	session.Run(context.TODO(), "CREATE INDEX index_Group IF NOT EXISTS FOR (g:Group) ON g.GroupName", nil)
 
 	session.Run(context.TODO(), "CREATE INDEX index_Policy IF NOT EXISTS FOR (p:Policy) ON p.Name", nil)
-	session.Run(context.TODO(), "CREATE INDEX index_PolicyId IF NOT EXISTS FOR (p:Policy) ON p.id", nil)
 
 	session.Run(context.TODO(), "CREATE INDEX index_Action IF NOT EXISTS FOR (n:Action) ON n.Action", nil)
 

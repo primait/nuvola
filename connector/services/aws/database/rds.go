@@ -35,11 +35,15 @@ func ListRDS(cfg aws.Config) (rdsRet *RDS, re *awshttp.ResponseError) {
 func (rc *RDSClient) listRDSClustersForRegion() (clusters []types.DBCluster) {
 	output, err := rc.client.DescribeDBClusters(context.TODO(), &rds.DescribeDBClustersInput{})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "RDS", "DescribeDBClusters")
+		if re.Response.StatusCode != 501 { // When using LocalStack: this is a Pro feature
+			nuvolaerror.HandleAWSError(re, "RDS", "DescribeDBClusters")
+		}
 	}
 
-	for i := 0; i < len(output.DBClusters); i++ {
-		clusters = append(clusters, output.DBClusters[i])
+	if output != nil {
+		for i := 0; i < len(output.DBClusters); i++ {
+			clusters = append(clusters, output.DBClusters[i])
+		}
 	}
 
 	return
@@ -48,11 +52,15 @@ func (rc *RDSClient) listRDSClustersForRegion() (clusters []types.DBCluster) {
 func (rc *RDSClient) listRDSInstancesForRegion() (instances []types.DBInstance) {
 	output, err := rc.client.DescribeDBInstances(context.TODO(), &rds.DescribeDBInstancesInput{})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "RDS", "DescribeDBInstances")
+		if re.Response.StatusCode != 501 { // When using LocalStack: this is a Pro feature
+			nuvolaerror.HandleAWSError(re, "RDS", "DescribeDBInstances")
+		}
 	}
 
-	for i := 0; i < len(output.DBInstances); i++ {
-		instances = append(instances, output.DBInstances[i])
+	if output != nil {
+		for i := 0; i < len(output.DBInstances); i++ {
+			instances = append(instances, output.DBInstances[i])
+		}
 	}
 	return
 }

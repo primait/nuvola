@@ -2,6 +2,7 @@ package awsconnector
 
 import (
 	"context"
+	"os"
 
 	"nuvola/connector/services/aws/database"
 	"nuvola/connector/services/aws/ec2"
@@ -27,8 +28,9 @@ func InitAWSConfiguration(profile string, awsEndpoint string) (awsc AWSConfig) {
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		if awsEndpoint != "" {
 			return aws.Endpoint{
-				PartitionID: "aws",
-				URL:         awsEndpoint,
+				PartitionID:   "aws",
+				URL:           awsEndpoint,
+				SigningRegion: os.Getenv("AWS_DEFAULT_REGION"),
 			}, nil
 		}
 
