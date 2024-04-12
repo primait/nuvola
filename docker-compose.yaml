@@ -5,23 +5,39 @@ services:
     image: neo4j:latest
     hostname: neo4j
     container_name: neo4j
+    networks:
+      - nuvola
+    cap_drop:
+      - ALL
+    cap_add:
+      - CAP_CHOWN
+      - CAP_FOWNER
+      - CAP_DAC_OVERRIDE
+      - CAP_SETGID
+      - CAP_SETUID
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "127.0.0.1:7474:7474"
+      - "0.0.0.0:7687:7687"
     volumes:
-      - logs:/logs/
-      - nuvoladb:/data
       - ./backup:/backup:rw
     environment:
       NEO4J_PLUGINS: '["apoc"]'
       NEO4J_AUTH: $NEO4J_AUTH
+      NEO4J_apoc_export_file_enabled: "true"
       NEO4J_server_memory_heap_initial__size: ${NEO4J_server_memory_heap_initial__size}
       NEO4J_server_memory_heap_max__size: ${NEO4J_server_memory_heap_max__size}
       NEO4J_server_memory_pagecache_size: ${NEO4J_server_memory_pagecache_size}
-      NEO4J_server_jvm_additional: "-XX:+ExitOnOutOfMemoryError"
-      NEO4J_initial_dbms_default__database: "nuvoladb"
+      NEO4J_server_jvm_additional: -XX:+ExitOnOutOfMemoryError
+      NEO4J_initial_dbms_default__database: nuvoladb
       NEO4J_dbms_cypher_forbid__shortestpath__common__nodes: "false"
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7474"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 1m
 
-volumes:
-  nuvoladb:
-  logs:
+networks:
+  nuvola:

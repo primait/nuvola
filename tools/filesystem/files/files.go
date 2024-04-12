@@ -2,7 +2,6 @@ package files
 
 import (
 	"io/fs"
-	"io/ioutil"
 	cli "nuvola/tools/cli/output"
 	nuvolaerror "nuvola/tools/error"
 	"os"
@@ -18,7 +17,7 @@ func PrettyJSONToFile(filePath string, fileName string, s interface{}) {
 	}
 
 	filePath = filePath + string(filepath.Separator) + fileName
-	if err := ioutil.WriteFile(filePath, cli.PrettyJSON(s), 0600); err != nil {
+	if err := os.WriteFile(filePath, cli.PrettyJSON(s), 0600); err != nil {
 		nuvolaerror.HandleError(err, "Files - PrettyJSONToFile", "Error on writing file")
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/log"
 )
 
 type Neo4jClient struct {
@@ -17,11 +18,11 @@ type Neo4jClient struct {
 	err    error
 }
 
-var logLevel = neo4j.LogLevel(neo4j.WARNING)
+var logLevel = log.Level(log.WARNING)
 
-var useConsoleLogger = func(level neo4j.LogLevel) func(config *config.Config) {
+var useConsoleLogger = func(level log.Level) func(config *config.Config) {
 	return func(config *config.Config) {
-		config.Log = neo4j.ConsoleLogger(level)
+		config.Log = log.ToConsole(level)
 	}
 }
 
@@ -42,48 +43,47 @@ func (nc *Neo4jClient) NewSession() neo4j.SessionWithContext {
 		AccessMode: neo4j.AccessModeWrite})
 }
 
-/* #nosec */
 //nolint:all
 func (nc *Neo4jClient) DeleteAll() {
 	session := nc.NewSession()
 	defer session.Close(context.TODO())
 
-	session.Run(context.TODO(), `call apoc.periodic.commit("MATCH (n) WITH n LIMIT $limit DETACH DELETE n RETURN count(*)", {limit:20000})`, nil)
-	session.Run(context.TODO(), "CALL apoc.schema.assert({},{})", nil)
-	session.Run(context.TODO(), "CALL apoc.trigger.removeAll()", nil)
+	session.Run(context.TODO(), `call apoc.periodic.commit("MATCH (n) WITH n LIMIT $limit DETACH DELETE n RETURN count(*)", {limit:20000})`, nil) // #nosec G104
+	session.Run(context.TODO(), "CALL apoc.schema.assert({},{})", nil)                                                                            // #nosec G104
+	session.Run(context.TODO(), "CALL apoc.trigger.removeAll()", nil)                                                                             // #nosec G104
 
 	// UNIQUE also create an index
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (u:User) ASSERT u.Arn IS UNIQUE", nil)
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (r:Role) ASSERT r.Arn IS UNIQUE", nil)
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (g:Group) ASSERT g.Arn IS UNIQUE", nil)
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (e:Ec2) ASSERT e.InstanceId IS UNIQUE", nil)
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (b:S3) ASSERT b.Name IS UNIQUE", nil)
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (l:Lambda) ASSERT l.FunctionConfiguration_FunctionArn IS UNIQUE", nil)
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (v:Vpc) ASSERT v.VpcId IS UNIQUE", nil)
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (r:Redshift) ASSERT r.ClusterIdentifier IS UNIQUE", nil)
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (d:Dynamodb) ASSERT d.Name IS UNIQUE", nil)
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (r:Rds) ASSERT r.DBClusterArn IS UNIQUE", nil)
-	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (r:Rds) ASSERT r.DBInstanceArn IS UNIQUE", nil)
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (u:User) ASSERT u.Arn IS UNIQUE", nil)                   // #nosec G104
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (r:Role) ASSERT r.Arn IS UNIQUE", nil)                   // #nosec G104
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (g:Group) ASSERT g.Arn IS UNIQUE", nil)                  // #nosec G104
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (e:Ec2) ASSERT e.InstanceId IS UNIQUE", nil)             // #nosec G104
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (b:S3) ASSERT b.Name IS UNIQUE", nil)                    // #nosec G104
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (l:Lambda) ASSERT l.FunctionArn IS UNIQUE", nil)         // #nosec G104
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (v:Vpc) ASSERT v.VpcId IS UNIQUE", nil)                  // #nosec G104
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (r:Redshift) ASSERT r.ClusterIdentifier IS UNIQUE", nil) // #nosec G104
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (d:Dynamodb) ASSERT d.Name IS UNIQUE", nil)              // #nosec G104
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (r:Rds) ASSERT r.DBClusterArn IS UNIQUE", nil)           // #nosec G104
+	session.Run(context.TODO(), "CREATE CONSTRAINT IF NOT EXISTS ON (r:Rds) ASSERT r.DBInstanceArn IS UNIQUE", nil)          // #nosec G104
 
-	session.Run(context.TODO(), "CREATE INDEX index_User IF NOT EXISTS FOR (u:User) ON u.UserName", nil)
+	session.Run(context.TODO(), "CREATE INDEX index_User IF NOT EXISTS FOR (u:User) ON u.UserName", nil) // #nosec G104
 
-	session.Run(context.TODO(), "CREATE INDEX index_Role IF NOT EXISTS FOR (r:Role) ON r.RoleName", nil)
-	session.Run(context.TODO(), "CREATE INDEX index_RoleInstanceProfileArn IF NOT EXISTS FOR (r:Role) ON r.InstanceProfileArn", nil)
+	session.Run(context.TODO(), "CREATE INDEX index_Role IF NOT EXISTS FOR (r:Role) ON r.RoleName", nil)                             // #nosec G104
+	session.Run(context.TODO(), "CREATE INDEX index_RoleInstanceProfileArn IF NOT EXISTS FOR (r:Role) ON r.InstanceProfileArn", nil) // #nosec G104
 
-	session.Run(context.TODO(), "CREATE INDEX index_Group IF NOT EXISTS FOR (g:Group) ON g.GroupName", nil)
+	session.Run(context.TODO(), "CREATE INDEX index_Group IF NOT EXISTS FOR (g:Group) ON g.GroupName", nil) // #nosec G104
 
-	session.Run(context.TODO(), "CREATE INDEX index_Policy IF NOT EXISTS FOR (p:Policy) ON p.Name", nil)
+	session.Run(context.TODO(), "CREATE INDEX index_Policy IF NOT EXISTS FOR (p:Policy) ON p.Name", nil) // #nosec G104
 
-	session.Run(context.TODO(), "CREATE INDEX index_Action IF NOT EXISTS FOR (n:Action) ON n.Action", nil)
+	session.Run(context.TODO(), "CREATE INDEX index_Action IF NOT EXISTS FOR (n:Action) ON n.Action", nil) // #nosec G104
 
-	session.Run(context.TODO(), "CREATE INDEX index_EC2InstanceProfiles IF NOT EXISTS FOR (e:Ec2) ON e.IamInstanceProfile_Id", nil)
+	session.Run(context.TODO(), "CREATE INDEX index_EC2InstanceProfiles IF NOT EXISTS FOR (e:Ec2) ON e.IamInstanceProfile_Id", nil) // #nosec G104
 
-	session.Run(context.TODO(), "CREATE INDEX index_VpcOwner IF NOT EXISTS FOR (v:Vpc) ON v.OwnerId", nil)
-	session.Run(context.TODO(), "CREATE INDEX index_VpcType IF NOT EXISTS FOR (v:Vpc) ON v.Type", nil)
+	session.Run(context.TODO(), "CREATE INDEX index_VpcOwner IF NOT EXISTS FOR (v:Vpc) ON v.OwnerId", nil) // #nosec G104
+	session.Run(context.TODO(), "CREATE INDEX index_VpcType IF NOT EXISTS FOR (v:Vpc) ON v.Type", nil)     // #nosec G104
 
-	session.Run(context.TODO(), "CREATE INDEX index_LambdaRole IF NOT EXISTS FOR (l:Lambda) ON l.Role", nil)
+	session.Run(context.TODO(), "CREATE INDEX index_LambdaRole IF NOT EXISTS FOR (l:Lambda) ON l.Role", nil) // #nosec G104
 
-	session.Run(context.TODO(), "CALL db.awaitIndexes(3000)", nil)
+	session.Run(context.TODO(), "CALL db.awaitIndexes(3000)", nil) // #nosec G104
 }
 
 func (nc *Neo4jClient) Query(query string, arguments map[string]interface{}) []map[string]interface{} {
