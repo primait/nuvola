@@ -8,4 +8,4 @@ This pull request updates the query to load data into Neo4j database using an th
 
 ## Checks
 
-- [] I have addressed any CI failures that surfaced when I created my pull request
+- [ ] I have addressed any CI failures that surfaced when I created my pull request
