@@ -2,13 +2,14 @@ package yamler
 
 import (
 	"fmt"
-	"io/ioutil"
-	"nuvola/tools/filesystem/files"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
 
-	nuvolaerror "nuvola/tools/error"
+	"github.com/primait/nuvola/tools/filesystem/files"
+
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -34,7 +35,7 @@ type Find struct {
 
 func GetConf(file string) (c *Conf) {
 	c = &Conf{}
-	yamlFile, err := ioutil.ReadFile(files.NormalizePath(file))
+	yamlFile, err := os.ReadFile(files.NormalizePath(file))
 	if err != nil {
 		nuvolaerror.HandleError(err, "Yamler - GetConf", "Error on reading rule file")
 	}

@@ -3,13 +3,15 @@ package neo4j_connector
 import (
 	"context"
 	"fmt"
-	awsconfig "nuvola/connector/services/aws"
-	servicesDatabase "nuvola/connector/services/aws/database"
-	servicesEC2 "nuvola/connector/services/aws/ec2"
-	servicesIAM "nuvola/connector/services/aws/iam"
-	servicesLambda "nuvola/connector/services/aws/lambda"
-	servicesS3 "nuvola/connector/services/aws/s3"
-	nuvolaerror "nuvola/tools/error"
+
+	nuvolaerror "github.com/primait/nuvola/tools/error"
+
+	awsconfig "github.com/primait/nuvola/connector/services/aws"
+	servicesDatabase "github.com/primait/nuvola/connector/services/aws/database"
+	servicesEC2 "github.com/primait/nuvola/connector/services/aws/ec2"
+	servicesIAM "github.com/primait/nuvola/connector/services/aws/iam"
+	servicesLambda "github.com/primait/nuvola/connector/services/aws/lambda"
+	servicesS3 "github.com/primait/nuvola/connector/services/aws/s3"
 
 	"strings"
 
@@ -20,51 +22,54 @@ import (
 )
 
 func (nc *Neo4jClient) AddUsers(users *[]servicesIAM.User) {
-	for i := range *users {
-		idUser := nc.createUser(&(*users)[i])
-		for _, inlinePolicy := range (*users)[i].InlinePolicies {
+	for _, user := range *users {
+		idUser := nc.createUser(user)
+		for _, inlinePolicy := range user.InlinePolicies {
 			idPolicy := nc.createPolicyUser(idUser, "", inlinePolicy.PolicyName, "inline")
-			nc.createPolicyRelationships(idPolicy, &inlinePolicy.Statement, *(*users)[i].UserName)
+			pol := inlinePolicy
+			nc.createPolicyRelationships(idPolicy, &pol.Statement, *user.UserName)
 		}
 
-		for _, attachedPolicy := range (*users)[i].AttachedPolicies {
+		for _, attachedPolicy := range user.AttachedPolicies {
 			idPolicy := nc.createPolicyUser(idUser, *attachedPolicy.PolicyArn, *attachedPolicy.PolicyName, "attached")
-			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement, *(*users)[i].UserName)
+			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement, *user.UserName)
 		}
 	}
 }
 
 func (nc *Neo4jClient) AddGroups(groups *[]servicesIAM.Group) {
-	for i := range *groups {
-		idGroup := nc.createGroup(&(*groups)[i])
-		for _, inlinePolicy := range (*groups)[i].InlinePolicies {
+	for _, group := range *groups {
+		idGroup := nc.createGroup(group)
+		for _, inlinePolicy := range group.InlinePolicies {
 			idPolicy := nc.createPolicyGroup(idGroup, "", inlinePolicy.PolicyName, "inline")
-			nc.createPolicyRelationships(idPolicy, &inlinePolicy.Statement, *(*groups)[i].GroupName)
+			pol := inlinePolicy
+			nc.createPolicyRelationships(idPolicy, &pol.Statement, *group.GroupName)
 		}
 
-		for _, attachedPolicy := range (*groups)[i].AttachedPolicies {
+		for _, attachedPolicy := range group.AttachedPolicies {
 			idPolicy := nc.createPolicyGroup(idGroup, *attachedPolicy.PolicyArn, *attachedPolicy.PolicyName, "attached")
-			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement, *(*groups)[i].GroupName)
+			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement, *group.GroupName)
 		}
 	}
 }
 
 func (nc *Neo4jClient) AddRoles(roles *[]servicesIAM.Role) {
-	for i := range *roles {
-		idRole := nc.createRole(&(*roles)[i])
-		for _, inlinePolicy := range (*roles)[i].InlinePolicies {
+	for _, role := range *roles {
+		idRole := nc.createRole(role)
+		for _, inlinePolicy := range role.InlinePolicies {
 			idPolicy := nc.createPolicyRole(idRole, "", inlinePolicy.PolicyName, "inline")
-			nc.createPolicyRelationships(idPolicy, &inlinePolicy.Statement, *(*roles)[i].RoleName)
+			pol := inlinePolicy
+			nc.createPolicyRelationships(idPolicy, &pol.Statement, *role.RoleName)
 		}
 
-		for _, attachedPolicy := range (*roles)[i].AttachedPolicies {
+		for _, attachedPolicy := range role.AttachedPolicies {
 			idPolicy := nc.createPolicyRole(idRole, *attachedPolicy.PolicyArn, *attachedPolicy.PolicyName, "attached")
-			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement, *(*roles)[i].RoleName)
+			nc.createPolicyRelationships(idPolicy, &attachedPolicy.Versions[0].Document.Statement, *role.RoleName)
 		}
 	}
 }
 
-func (nc *Neo4jClient) createGroup(group *servicesIAM.Group) int64 {
+func (nc *Neo4jClient) createGroup(group servicesIAM.Group) int64 {
 	session := nc.NewSession()
 	defer session.Close(context.TODO())
 	query := `MERGE (g:IAM:Group {GroupName: $GroupName, CreateDate: $CreateDate, Arn: $Arn, Path: $Path, GroupId: $GroupId}) RETURN id(g)`
@@ -129,7 +134,7 @@ func (nc *Neo4jClient) createPolicyGroup(idGroup int64, policyArn string, name s
 	return idPolicy.(int64)
 }
 
-func (nc *Neo4jClient) createUser(user *servicesIAM.User) int64 {
+func (nc *Neo4jClient) createUser(user servicesIAM.User) int64 {
 	groupNames := make([]string, 0)
 	query := `MERGE (u:IAM:User {
 		UserName: $UserName, 
@@ -237,7 +242,7 @@ func (nc *Neo4jClient) createPolicyUser(idUser int64, policyArn string, name str
 	return idPolicy.(int64)
 }
 
-func (nc *Neo4jClient) createRole(role *servicesIAM.Role) int64 {
+func (nc *Neo4jClient) createRole(role servicesIAM.Role) int64 {
 	session := nc.NewSession()
 	defer session.Close(context.TODO())
 	query := ""

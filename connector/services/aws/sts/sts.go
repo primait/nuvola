@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	nuvolaerror "nuvola/tools/error"
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/transport/http"

@@ -1,0 +1,89 @@
+name: Golang CI
+on:
+  push:
+    branches:
+      - master
+      - dev
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+  pull_request:
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+
+concurrency:
+  group: nuvola-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+        # v4.1.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491
+        # v5.0.0
+        with:
+          go-version: "1.21"
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804
+        # v4.0.0
+        with:
+          version: latest
+          only-new-issues: true
+          args: --timeout 300s --exclude-dirs="(^|/)assets($|/)" --enable misspell --enable gofmt --enable goimports --enable whitespace
+
+  gosec:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+        # v4.1.2
+        with:
+          fetch-depth: 0
+      - name: Run Gosec Security Scanner
+        # master to fetch latest checks
+        # kics-scan ignore-line
+        uses: securego/gosec@26e57d6b340778c2983cd61775bc7e8bb41d002a
+        # V.2.19.0
+        with:
+          args: "-exclude-dir=assets -no-fail -fmt sarif -out results.sarif ./..."
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@4b6aa0b07da05d6e43d0e5f9c8596a6532ce1c85
+        # v2.15.3
+        with:
+          sarif_file: ./results.sarif
+
+  go-build-and-test:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+        # v4.1.2
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491
+        # v5.0.0
+        with:
+          go-version: "1.21"
+      - name: Install dependencies
+        run: go get .
+      - name: Build
+        run: go build ./...
+      - name: Test with the Go CLI
+        run: go test ./...

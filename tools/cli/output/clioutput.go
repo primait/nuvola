@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	nuvolaerror "nuvola/tools/error"
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 
 	"github.com/fatih/color"
 )

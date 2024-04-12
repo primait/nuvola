@@ -8,12 +8,13 @@ import (
 	"log"
 	"strings"
 
-	connector "nuvola/connector"
-	clioutput "nuvola/tools/cli/output"
-	nuvolaerror "nuvola/tools/error"
-	"nuvola/tools/filesystem/files"
-	unzip "nuvola/tools/filesystem/zip"
-	"nuvola/tools/yamler"
+	connector "github.com/primait/nuvola/connector"
+
+	clioutput "github.com/primait/nuvola/tools/cli/output"
+	nuvolaerror "github.com/primait/nuvola/tools/error"
+	"github.com/primait/nuvola/tools/filesystem/files"
+	unzip "github.com/primait/nuvola/tools/filesystem/zip"
+	"github.com/primait/nuvola/tools/yamler"
 )
 
 func ImportZipFile(connector *connector.StorageConnector, zipfile string) {

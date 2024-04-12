@@ -3,7 +3,7 @@ package tests
 import (
 	"context"
 
-	awsconnector "nuvola/connector/services/aws"
+	awsconnector "github.com/primait/nuvola/connector/services/aws"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"

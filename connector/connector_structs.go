@@ -1,8 +1,8 @@
 package connector
 
 import (
-	awsconfig "nuvola/connector/services/aws"
-	neo4jconnector "nuvola/connector/services/neo4j"
+	awsconfig "github.com/primait/nuvola/connector/services/aws"
+	neo4jconnector "github.com/primait/nuvola/connector/services/neo4j"
 )
 
 type StorageConnector struct {

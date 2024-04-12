@@ -3,16 +3,18 @@ package connector
 import (
 	"encoding/json"
 	"fmt"
-	"nuvola/connector/services/aws/database"
-	"nuvola/connector/services/aws/ec2"
-	"nuvola/connector/services/aws/iam"
-	"nuvola/connector/services/aws/lambda"
-	"nuvola/connector/services/aws/s3"
-	neo4jconnector "nuvola/connector/services/neo4j"
-	cli_output "nuvola/tools/cli/output"
-	nuvolaerror "nuvola/tools/error"
 	"os"
 	"regexp"
+
+	cli_output "github.com/primait/nuvola/tools/cli/output"
+	nuvolaerror "github.com/primait/nuvola/tools/error"
+
+	"github.com/primait/nuvola/connector/services/aws/database"
+	"github.com/primait/nuvola/connector/services/aws/ec2"
+	"github.com/primait/nuvola/connector/services/aws/iam"
+	"github.com/primait/nuvola/connector/services/aws/lambda"
+	"github.com/primait/nuvola/connector/services/aws/s3"
+	neo4jconnector "github.com/primait/nuvola/connector/services/neo4j"
 
 	"github.com/joho/godotenv"
 )

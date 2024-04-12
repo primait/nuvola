@@ -7,12 +7,14 @@ import (
 
 	"os"
 
-	"nuvola/connector"
-	"nuvola/controller/assess"
-	"nuvola/controller/dump"
-	"nuvola/controller/enumerate"
-	"nuvola/tools/cli/input/cmdflags"
-	clioutput "nuvola/tools/cli/output"
+	"github.com/primait/nuvola/controller/assess"
+	"github.com/primait/nuvola/controller/dump"
+	"github.com/primait/nuvola/controller/enumerate"
+
+	"github.com/primait/nuvola/connector"
+
+	"github.com/primait/nuvola/tools/cli/input/cmdflags"
+	clioutput "github.com/primait/nuvola/tools/cli/output"
 )
 
 func main() {
