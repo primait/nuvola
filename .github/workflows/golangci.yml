@@ -8,11 +8,13 @@ on:
       - "**.go"
       - "go.mod"
       - "go.sum"
+      - ".github/workflows/golangci.yml"
   pull_request:
     paths:
       - "**.go"
       - "go.mod"
       - "go.sum"
+      - ".github/workflows/golangci.yml"
 
 concurrency:
   group: nuvola-ci-${{ github.ref }}
