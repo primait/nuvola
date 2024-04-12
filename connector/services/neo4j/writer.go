@@ -2,9 +2,7 @@ package neo4j_connector
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	awsconfig "nuvola/connector/services/aws"
 	servicesDatabase "nuvola/connector/services/aws/database"
 	servicesEC2 "nuvola/connector/services/aws/ec2"
@@ -318,12 +316,6 @@ func (nc *Neo4jClient) createPolicyRole(idRole int64, policyArn string, name str
 func (nc *Neo4jClient) AddObjects(result map[string]interface{}, query string) {
 	session := nc.NewSession()
 	defer session.Close(context.TODO())
-
-	b, e := json.Marshal(result)
-	if e != nil {
-		log.Fatal(e)
-	}
-	fmt.Println(string(b))
 
 	_, err := session.ExecuteWrite(context.TODO(), func(tx neo4j.ManagedTransaction) (any, error) {
 		var result, err = tx.Run(context.TODO(), query, result)
