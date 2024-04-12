@@ -1,6 +1,6 @@
 # nuvola
 
-[![Run Gosec](https://github.com/primait/nuvola/actions/workflows/gosec.yml/badge.svg)](https://github.com/primait/nuvola/actions/workflows/gosec.yml) [![golangci-lint](https://github.com/primait/nuvola/actions/workflows/golanci-lint.yml/badge.svg)](https://github.com/primait/nuvola/actions/workflows/golanci-lint.yml)
+[![Golang CI](https://github.com/primait/nuvola/actions/workflows/golangci.yml/badge.svg)](https://github.com/primait/nuvola/actions/workflows/golangci.yml)
 
 <p align="center">
   <img src="./assets/logo/nuvola-logo-big-light.png" height="300">
