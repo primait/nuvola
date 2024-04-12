@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	nuvolaerror "nuvola/tools/error"
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"

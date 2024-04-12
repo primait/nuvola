@@ -2,13 +2,14 @@ package yamler
 
 import (
 	"fmt"
-	"nuvola/tools/filesystem/files"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
 
-	nuvolaerror "nuvola/tools/error"
+	"github.com/primait/nuvola/tools/filesystem/files"
+
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"

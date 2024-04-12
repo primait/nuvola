@@ -3,13 +3,15 @@ package dump
 import (
 	"encoding/json"
 	"fmt"
-	"nuvola/connector"
-	clioutput "nuvola/tools/cli/output"
-	nuvolaerror "nuvola/tools/error"
-	"nuvola/tools/filesystem/files"
-	"nuvola/tools/filesystem/zip"
 	"reflect"
 	"time"
+
+	"github.com/primait/nuvola/connector"
+
+	clioutput "github.com/primait/nuvola/tools/cli/output"
+	nuvolaerror "github.com/primait/nuvola/tools/error"
+	"github.com/primait/nuvola/tools/filesystem/files"
+	"github.com/primait/nuvola/tools/filesystem/zip"
 )
 
 var AWSResults = map[string]interface{}{

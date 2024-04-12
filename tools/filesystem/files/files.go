@@ -2,13 +2,14 @@ package files
 
 import (
 	"io/fs"
-	cli "nuvola/tools/cli/output"
-	nuvolaerror "nuvola/tools/error"
 	"os"
 	"os/user"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	cli "github.com/primait/nuvola/tools/cli/output"
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 )
 
 func PrettyJSONToFile(filePath string, fileName string, s interface{}) {

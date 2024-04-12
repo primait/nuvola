@@ -6,8 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	nuvolaerror "nuvola/tools/error"
 	"strings"
+
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	aat "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"

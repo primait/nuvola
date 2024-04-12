@@ -3,13 +3,15 @@ package neo4j_connector
 import (
 	"context"
 	"fmt"
-	awsconfig "nuvola/connector/services/aws"
-	servicesDatabase "nuvola/connector/services/aws/database"
-	servicesEC2 "nuvola/connector/services/aws/ec2"
-	servicesIAM "nuvola/connector/services/aws/iam"
-	servicesLambda "nuvola/connector/services/aws/lambda"
-	servicesS3 "nuvola/connector/services/aws/s3"
-	nuvolaerror "nuvola/tools/error"
+
+	nuvolaerror "github.com/primait/nuvola/tools/error"
+
+	awsconfig "github.com/primait/nuvola/connector/services/aws"
+	servicesDatabase "github.com/primait/nuvola/connector/services/aws/database"
+	servicesEC2 "github.com/primait/nuvola/connector/services/aws/ec2"
+	servicesIAM "github.com/primait/nuvola/connector/services/aws/iam"
+	servicesLambda "github.com/primait/nuvola/connector/services/aws/lambda"
+	servicesS3 "github.com/primait/nuvola/connector/services/aws/s3"
 
 	"strings"
 

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
-	print "nuvola/tools/cli/output"
-	nuvolaerror "nuvola/tools/error"
+	print "github.com/primait/nuvola/tools/cli/output"
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 )
 
 func Zip(path string, profile string, values *map[string]interface{}) {

@@ -7,12 +7,13 @@ import (
 	"strconv"
 	"strings"
 
-	servicesDatabase "nuvola/connector/services/aws/database"
-	servicesEC2 "nuvola/connector/services/aws/ec2"
-	servicesIAM "nuvola/connector/services/aws/iam"
-	servicesLambda "nuvola/connector/services/aws/lambda"
-	servicesS3 "nuvola/connector/services/aws/s3"
-	nuvolaerror "nuvola/tools/error"
+	nuvolaerror "github.com/primait/nuvola/tools/error"
+
+	servicesDatabase "github.com/primait/nuvola/connector/services/aws/database"
+	servicesEC2 "github.com/primait/nuvola/connector/services/aws/ec2"
+	servicesIAM "github.com/primait/nuvola/connector/services/aws/iam"
+	servicesLambda "github.com/primait/nuvola/connector/services/aws/lambda"
+	servicesS3 "github.com/primait/nuvola/connector/services/aws/s3"
 
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"

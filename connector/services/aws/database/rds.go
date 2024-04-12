@@ -3,8 +3,10 @@ package database
 import (
 	"context"
 	"errors"
-	"nuvola/connector/services/aws/ec2"
-	nuvolaerror "nuvola/tools/error"
+
+	nuvolaerror "github.com/primait/nuvola/tools/error"
+
+	"github.com/primait/nuvola/connector/services/aws/ec2"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"

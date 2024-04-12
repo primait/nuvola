@@ -4,8 +4,9 @@ import (
 	"context"
 	b64 "encoding/base64"
 	"errors"
-	nuvolaerror "nuvola/tools/error"
 	"sync"
+
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"

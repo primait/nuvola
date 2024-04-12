@@ -5,10 +5,11 @@ import (
 	"context"
 	"errors"
 	"log"
-	nuvolaerror "nuvola/tools/error"
 	"sort"
 	"sync"
 	"time"
+
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"

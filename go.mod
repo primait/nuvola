@@ -1,4 +1,4 @@
-module nuvola
+module github.com/primait/nuvola
 
 go 1.21
 

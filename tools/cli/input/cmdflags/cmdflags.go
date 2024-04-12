@@ -3,9 +3,10 @@ package cmdflags
 import (
 	"flag"
 	"log"
-	nuvolaerror "nuvola/tools/error"
-	"nuvola/tools/filesystem/files"
 	"os"
+
+	nuvolaerror "github.com/primait/nuvola/tools/error"
+	"github.com/primait/nuvola/tools/filesystem/files"
 )
 
 var AWS_PROFILE string

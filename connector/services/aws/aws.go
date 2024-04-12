@@ -4,13 +4,14 @@ import (
 	"context"
 	"os"
 
-	"nuvola/connector/services/aws/database"
-	"nuvola/connector/services/aws/ec2"
-	"nuvola/connector/services/aws/iam"
-	"nuvola/connector/services/aws/lambda"
-	"nuvola/connector/services/aws/s3"
-	"nuvola/connector/services/aws/sts"
-	nuvolaerror "nuvola/tools/error"
+	nuvolaerror "github.com/primait/nuvola/tools/error"
+
+	"github.com/primait/nuvola/connector/services/aws/database"
+	"github.com/primait/nuvola/connector/services/aws/ec2"
+	"github.com/primait/nuvola/connector/services/aws/iam"
+	"github.com/primait/nuvola/connector/services/aws/lambda"
+	"github.com/primait/nuvola/connector/services/aws/s3"
+	"github.com/primait/nuvola/connector/services/aws/sts"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"

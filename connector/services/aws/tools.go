@@ -1,9 +1,10 @@
 package awsconnector
 
 import (
-	nuvolaerror "nuvola/tools/error"
 	"strings"
 	"time"
+
+	nuvolaerror "github.com/primait/nuvola/tools/error"
 
 	req "github.com/imroc/req/v3"
 	"github.com/itchyny/gojq"
