@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491
         # v5.0.0
         with:
-          go-version: "1.21"
+          go-version-file: "go.mod"
       - name: golangci-lint
         uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804
         # v4.0.0
@@ -79,11 +79,10 @@ jobs:
         # v4.1.2
         with:
           fetch-depth: 0
-      - name: Setup Go
-        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491
         # v5.0.0
         with:
-          go-version: "1.21"
+          go-version-file: "go.mod"
       - name: Install dependencies
         run: go get .
       - name: Build
