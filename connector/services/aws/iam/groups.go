@@ -6,11 +6,10 @@ import (
 	"sort"
 	"sync"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/primait/nuvola/pkg/io/logging"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -26,7 +25,7 @@ func ListGroups(cfg aws.Config) (groups []*Group) {
 		wg.Add(1)
 		go func(group types.Group) {
 			if err := sem.Acquire(context.Background(), 1); err != nil {
-				nuvolaerror.HandleError(err, "IAM - Groups", "ListGroups - Acquire Semaphore")
+				logging.HandleError(err, "IAM - Groups", "ListGroups - Acquire Semaphore")
 			}
 			defer sem.Release(1)
 			defer mu.Unlock()
@@ -58,7 +57,7 @@ func (ic *IAMClient) listGroupsForUser(identity string) []types.Group {
 		UserName: &identity,
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "IAM - Groups", "ListGroupsForUser")
+		logging.HandleAWSError(re, "IAM - Groups", "ListGroupsForUser")
 	}
 	return output.Groups
 }
@@ -70,7 +69,7 @@ func listGroups() (collectedGroups []types.Group) {
 			Marker: marker,
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Groups", "ListGroups")
+			logging.HandleAWSError(re, "IAM - Groups", "ListGroups")
 		}
 
 		collectedGroups = append(collectedGroups, output.Groups...)

@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/log"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 type Neo4jClient struct {
@@ -117,7 +116,7 @@ func (nc *Neo4jClient) Query(query string, arguments map[string]interface{}) []m
 		return results, result.Err()
 	})
 	if err != nil {
-		nuvolaerror.HandleError(err, "Neo4j - Query", fmt.Sprintf("Error on executing query %s with %s", query, arguments))
+		logging.HandleError(err, "Neo4j - Query", fmt.Sprintf("Error on executing query %s with %s", query, arguments))
 	}
 
 	return results.([]map[string]interface{})

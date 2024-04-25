@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/primait/nuvola/connector/services/aws/ec2"
+	"github.com/primait/nuvola/pkg/io/logging"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
@@ -38,7 +37,7 @@ func (rc *RDSClient) listRDSClustersForRegion() (clusters []types.DBCluster) {
 	output, err := rc.client.DescribeDBClusters(context.TODO(), &rds.DescribeDBClustersInput{})
 	if errors.As(err, &re) {
 		if re.Response.StatusCode != 501 { // When using LocalStack: this is a Pro feature
-			nuvolaerror.HandleAWSError(re, "RDS", "DescribeDBClusters")
+			logging.HandleAWSError(re, "RDS", "DescribeDBClusters")
 		}
 	}
 
@@ -55,7 +54,7 @@ func (rc *RDSClient) listRDSInstancesForRegion() (instances []types.DBInstance) 
 	output, err := rc.client.DescribeDBInstances(context.TODO(), &rds.DescribeDBInstancesInput{})
 	if errors.As(err, &re) {
 		if re.Response.StatusCode != 501 { // When using LocalStack: this is a Pro feature
-			nuvolaerror.HandleAWSError(re, "RDS", "DescribeDBInstances")
+			logging.HandleAWSError(re, "RDS", "DescribeDBInstances")
 		}
 	}
 

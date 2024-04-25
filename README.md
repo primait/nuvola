@@ -61,7 +61,7 @@ make build
 ./nuvola assess -import ~/DumpDumpFolder/nuvola-default_RO_20220901.zip
 ```
 
-3. To only perform static assessments on the data loaded into the Neo4j database using the [predefined ruleset](https://github.com/primait/nuvola/tree/master/assess/rules):
+3. To only perform static assessments on the data loaded into the Neo4j database using the [predefined ruleset](https://github.com/primait/nuvola/tree/master/assets/rules):
 
 ```bash
 ./nuvola assess

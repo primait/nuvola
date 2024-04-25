@@ -1,4 +1,4 @@
-package assess
+package cmd
 
 import (
 	"archive/zip"
@@ -8,16 +8,38 @@ import (
 	"log"
 	"strings"
 
-	connector "github.com/primait/nuvola/connector"
-
-	clioutput "github.com/primait/nuvola/tools/cli/output"
-	nuvolaerror "github.com/primait/nuvola/tools/error"
+	"github.com/primait/nuvola/connector"
+	"github.com/primait/nuvola/pkg/io/logging"
 	"github.com/primait/nuvola/tools/filesystem/files"
 	unzip "github.com/primait/nuvola/tools/filesystem/zip"
 	"github.com/primait/nuvola/tools/yamler"
+	"github.com/spf13/cobra"
 )
 
-func ImportZipFile(connector *connector.StorageConnector, zipfile string) {
+var assessCmd = &cobra.Command{
+	Use:   "assess",
+	Short: "Execute assessment queries against data loaded in Neo4J",
+	Run: func(cmd *cobra.Command, args []string) {
+		if cmd.Flags().Changed(flagVerbose) {
+			logger.SetVerboseLevel()
+		}
+		if cmd.Flags().Changed(flagDebug) {
+			logger.SetDebugLevel()
+		}
+
+		connector.SetActions()
+		storageConnector := connector.NewStorageConnector()
+		if importFile != "" && !noImport {
+			logger.Info("Flushing database")
+			logger.Info(fmt.Sprintf("Importing %s", importFile))
+			importZipFile(storageConnector, importFile)
+		}
+
+		assess(storageConnector, "./assets/rules/")
+	},
+}
+
+func importZipFile(connector *connector.StorageConnector, zipfile string) {
 	connector.FlushAll()
 	var ordering = []string{
 		"Groups",
@@ -47,7 +69,7 @@ func ImportZipFile(connector *connector.StorageConnector, zipfile string) {
 	for _, f := range orderedFiles {
 		rc, err := f.Open()
 		if err != nil {
-			nuvolaerror.HandleError(err, "Assess", "Opening content of ZIP")
+			logging.HandleError(err, "Assess", "Opening content of ZIP")
 		}
 		defer func() {
 			if err := rc.Close(); err != nil {
@@ -58,13 +80,13 @@ func ImportZipFile(connector *connector.StorageConnector, zipfile string) {
 		buf := new(bytes.Buffer)
 		_, err = io.Copy(buf, rc) // #nosecG110
 		if err != nil {
-			nuvolaerror.HandleError(err, "Assess", "Copying buffer from ZIP")
+			logging.HandleError(err, "Assess", "Copying buffer from ZIP")
 		}
 		connector.ImportResults(f.Name, buf.Bytes())
 	}
 }
 
-func Assess(connector *connector.StorageConnector, rulesPath string) {
+func assess(connector *connector.StorageConnector, rulesPath string) {
 	// perform checks based on pre-defined static rules
 	for _, rule := range files.GetFiles(rulesPath, ".ya?ml") {
 		var c = yamler.GetConf(rule)
@@ -72,13 +94,13 @@ func Assess(connector *connector.StorageConnector, rulesPath string) {
 			query, args := yamler.PrepareQuery(c)
 			results := connector.Query(query, args)
 
-			clioutput.PrintRed("Running rule: " + rule)
-			clioutput.PrintGreen("Name: " + c.Name)
-			clioutput.PrintGreen("Arguments:")
-			clioutput.PrintDarkGreen(yamler.ArgsToQueryNeo4jBrowser(args))
-			clioutput.PrintGreen("Query:")
-			clioutput.PrintDarkGreen(query)
-			clioutput.PrintGreen("Description: " + c.Description)
+			logging.PrintRed("Running rule: " + rule)
+			logging.PrintGreen("Name: " + c.Name)
+			logging.PrintGreen("Arguments:")
+			logging.PrintDarkGreen(yamler.ArgsToQueryNeo4jBrowser(args))
+			logging.PrintGreen("Query:")
+			logging.PrintDarkGreen(query)
+			logging.PrintGreen("Description: " + c.Description)
 
 			for _, resultMap := range results {
 				for key, value := range resultMap {
@@ -97,4 +119,8 @@ func Assess(connector *connector.StorageConnector, rulesPath string) {
 			fmt.Print("\n")
 		}
 	}
+}
+
+func init() {
+	rootCmd.AddCommand(assessCmd)
 }

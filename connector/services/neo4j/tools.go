@@ -7,13 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	servicesDatabase "github.com/primait/nuvola/connector/services/aws/database"
 	servicesEC2 "github.com/primait/nuvola/connector/services/aws/ec2"
 	servicesIAM "github.com/primait/nuvola/connector/services/aws/iam"
 	servicesLambda "github.com/primait/nuvola/connector/services/aws/lambda"
 	servicesS3 "github.com/primait/nuvola/connector/services/aws/s3"
+	"github.com/primait/nuvola/pkg/io/logging"
 
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -91,7 +90,7 @@ func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]s
 				items = append(items, item)
 				parseResources(statement.Resource, service, action, strconv.Itoa(int(idPolicy)), principal)
 			default:
-				nuvolaerror.HandleError(nil, "Neo4j", fmt.Sprintf("createPolicyRelationships - case not implemented for %v of type: %v", statement.Action, v))
+				logging.HandleError(nil, "Neo4j", fmt.Sprintf("createPolicyRelationships - case not implemented for %v of type: %v", statement.Action, v))
 			}
 
 			// Append all actions of this statement to the UNWIND map
@@ -115,7 +114,7 @@ func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]s
 		})
 
 		if err != nil {
-			nuvolaerror.HandleError(err, "Neo4j - createPolicyRelationships", "Error on executing query")
+			logging.HandleError(err, "Neo4j - createPolicyRelationships", "Error on executing query")
 		}
 	}
 }

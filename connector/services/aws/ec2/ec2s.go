@@ -6,12 +6,11 @@ import (
 	"errors"
 	"sync"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/primait/nuvola/pkg/io/logging"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -42,14 +41,14 @@ func (ec *EC2Client) listInstancesForRegion() (ec2s []*Instance) {
 		}},
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "EC2", "listInstancesForRegion")
+		logging.HandleAWSError(re, "EC2", "listInstancesForRegion")
 	}
 
 	for _, instances := range output.Reservations {
 		wg.Add(1)
 		go func(instances types.Reservation) {
 			if err := sem.Acquire(context.Background(), 1); err != nil {
-				nuvolaerror.HandleError(err, "EC2", "listInstancesForRegion - Acquire Semaphore")
+				logging.HandleError(err, "EC2", "listInstancesForRegion - Acquire Semaphore")
 			}
 			defer sem.Release(1)
 			defer wg.Done()
@@ -80,7 +79,7 @@ func (ec *EC2Client) getInstanceUserDataAttribute(instanceID string) string {
 		Attribute:  types.InstanceAttributeNameUserData,
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "EC2", "DescribeInstanceAttribute")
+		logging.HandleAWSError(re, "EC2", "DescribeInstanceAttribute")
 	}
 
 	if userData.UserData != nil {
@@ -107,7 +106,7 @@ func (ec *EC2Client) getSecurityGroups(groupID string) (secGroups []types.Securi
 		GroupIds: []string{groupID},
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "EC2", "DescribeSecurityGroups")
+		logging.HandleAWSError(re, "EC2", "DescribeSecurityGroups")
 	}
 
 	secGroups = append(secGroups, output.SecurityGroups...)
@@ -119,7 +118,7 @@ func (ec *EC2Client) getInstanceState(instanceID string) (state types.InstanceSt
 		InstanceIds: []string{instanceID},
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "EC2", "DescribeSecurityGroups")
+		logging.HandleAWSError(re, "EC2", "DescribeSecurityGroups")
 	}
 
 	if output != nil && len(output.InstanceStatuses) > 0 {

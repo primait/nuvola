@@ -6,8 +6,7 @@ import (
 	"os"
 	"regexp"
 
-	cli_output "github.com/primait/nuvola/tools/cli/output"
-	nuvolaerror "github.com/primait/nuvola/tools/error"
+	"github.com/primait/nuvola/pkg/io/logging"
 
 	"github.com/primait/nuvola/connector/services/aws/database"
 	"github.com/primait/nuvola/connector/services/aws/ec2"
@@ -15,21 +14,15 @@ import (
 	"github.com/primait/nuvola/connector/services/aws/lambda"
 	"github.com/primait/nuvola/connector/services/aws/s3"
 	neo4jconnector "github.com/primait/nuvola/connector/services/neo4j"
-
-	"github.com/joho/godotenv"
 )
 
 func NewStorageConnector() *StorageConnector {
-	// Load .env
-	if err := godotenv.Load(); err != nil {
-		nuvolaerror.HandleError(err, "NewStorageConnector", "Error loading .env file")
-	}
 	neo4jURL := os.Getenv("NEO4J_URL")
 	neo4jUsername := "neo4j"
 	neo4jPassword := os.Getenv("PASSWORD")
 	client, err := neo4jconnector.Connect(neo4jURL, neo4jUsername, neo4jPassword)
 	if err != nil {
-		nuvolaerror.HandleError(err, "NewStorageConnector", "Error connecting to database")
+		logging.HandleError(err, "NewStorageConnector", "Error connecting to database")
 	}
 	connector := &StorageConnector{
 		Client: *client,
@@ -56,7 +49,7 @@ func (sc *StorageConnector) ImportResults(what string, content []byte) {
 	var dynamodbs = regexp.MustCompile(`^DynamoDBs`)
 	var redshiftdbs = regexp.MustCompile(`^RedshiftDBs`)
 
-	cli_output.PrintDarkGreen(fmt.Sprintf("Importing: %s", what))
+	logging.PrintDarkGreen(fmt.Sprintf("Importing: %s", what))
 	switch {
 	case whoami.MatchString(what):
 	case credentialReport.MatchString(what):
@@ -102,7 +95,7 @@ func (sc *StorageConnector) ImportResults(what string, content []byte) {
 		_ = json.Unmarshal(content, &contentStruct)
 		sc.Client.AddRedshift(&contentStruct)
 	default:
-		nuvolaerror.HandleError(nil, "ImportResults", "Error importing data")
+		logging.HandleError(nil, "ImportResults", "Error importing data")
 	}
 }
 
@@ -110,7 +103,7 @@ func (sc *StorageConnector) ImportBulkResults(content map[string]interface{}) {
 	for k, v := range content {
 		value, err := json.Marshal(v)
 		if err != nil {
-			nuvolaerror.HandleError(err, "ImportBulkResults", "Error on marshalling data")
+			logging.HandleError(err, "ImportBulkResults", "Error on marshalling data")
 		}
 		sc.ImportResults(k, value)
 	}

@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/primait/nuvola/connector/services/aws/ec2"
+	"github.com/primait/nuvola/pkg/io/logging"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -38,7 +37,7 @@ func (dc *DynamoClient) listDynamoDBTablesForRegion() (tableNames []string) {
 		Limit: aws.Int32(100),
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "DynamoDB", "ListTables")
+		logging.HandleAWSError(re, "DynamoDB", "ListTables")
 	}
 
 	tableNames = output.TableNames

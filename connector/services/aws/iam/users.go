@@ -9,12 +9,11 @@ import (
 	"sync"
 	"time"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/gocarina/gocsv"
+	"github.com/primait/nuvola/pkg/io/logging"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -48,7 +47,7 @@ func ListUsers(cfg aws.Config, credentialReport map[string]*CredentialReport) (u
 		wg.Add(1)
 		go func(user types.User) {
 			if err := sem.Acquire(context.Background(), 1); err != nil {
-				nuvolaerror.HandleError(err, "IAM - Users", "ListUsers - Acquire Semaphore")
+				logging.HandleError(err, "IAM - Users", "ListUsers - Acquire Semaphore")
 			}
 			defer sem.Release(1)
 			defer mu.Unlock()
@@ -95,7 +94,7 @@ func listUsers() (collectedUsers []types.User) {
 			Marker: marker,
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Users", "ListUsers")
+			logging.HandleAWSError(re, "IAM - Users", "ListUsers")
 		}
 
 		collectedUsers = append(collectedUsers, output.Users...)
@@ -121,30 +120,30 @@ func GetCredentialReport(cfg aws.Config) (credentialReport map[string]*Credentia
 		if re.HTTPStatusCode() == 410 { // Gone: https://http.cat/410
 			checkGen, err := iamClient.GenerateCredentialReport(context.TODO(), &iam.GenerateCredentialReportInput{})
 			if errors.As(err, &re) {
-				nuvolaerror.HandleAWSError(re, "IAM - Users", "GenerateCredentialReport")
+				logging.HandleAWSError(re, "IAM - Users", "GenerateCredentialReport")
 			}
 			log.Println("Credential Report generation requested...")
 			for checkGen.State != "COMPLETE" {
 				if countRetries >= maxRetries {
-					nuvolaerror.HandleAWSError(re, "IAM - Policies", "GenerateCredentialReport")
+					logging.HandleAWSError(re, "IAM - Policies", "GenerateCredentialReport")
 				}
 				countRetries++
 				time.Sleep(5 * time.Second)
 				checkGen, err = iamClient.GenerateCredentialReport(context.TODO(), &iam.GenerateCredentialReportInput{})
 				if errors.As(err, &re) {
-					nuvolaerror.HandleAWSError(re, "IAM - Users", "GenerateCredentialReport")
+					logging.HandleAWSError(re, "IAM - Users", "GenerateCredentialReport")
 				}
 			}
 			return GetCredentialReport(cfg)
 		} else {
-			nuvolaerror.HandleAWSError(re, "IAM - Users", "GetCredentialReport")
+			logging.HandleAWSError(re, "IAM - Users", "GetCredentialReport")
 		}
 		return nil
 	}
 
 	credentialReportCSV := []*CredentialReport{}
 	if err := gocsv.Unmarshal(bytes.NewReader(output.Content), &credentialReportCSV); err != nil {
-		nuvolaerror.HandleError(err, "IAM - Users", "Umarshalling credentialReportCSV")
+		logging.HandleError(err, "IAM - Users", "Umarshalling credentialReportCSV")
 	}
 
 	credentialReport = make(map[string]*CredentialReport)
@@ -159,7 +158,7 @@ func (ic *IAMClient) listAccessKeys(identity string) (accessKeys []types.AccessK
 		UserName: &identity,
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "IAM - Users", "ListAccessKeys")
+		logging.HandleAWSError(re, "IAM - Users", "ListAccessKeys")
 	}
 	accessKeys = output.AccessKeyMetadata
 	return
@@ -171,7 +170,7 @@ func (ic *IAMClient) listLoginProfile(identity string) (loginProfile types.Login
 	})
 	if errors.As(err, &re) {
 		if re.HTTPStatusCode() != 404 { // an user may not have a login profile
-			nuvolaerror.HandleAWSError(re, "IAM - Users", "GetLoginProfile")
+			logging.HandleAWSError(re, "IAM - Users", "GetLoginProfile")
 		}
 		return
 	}

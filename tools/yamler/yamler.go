@@ -7,9 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/primait/nuvola/pkg/io/logging"
 	"github.com/primait/nuvola/tools/filesystem/files"
-
-	nuvolaerror "github.com/primait/nuvola/tools/error"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -37,12 +36,12 @@ func GetConf(file string) (c *Conf) {
 	c = &Conf{}
 	yamlFile, err := os.ReadFile(files.NormalizePath(file))
 	if err != nil {
-		nuvolaerror.HandleError(err, "Yamler - GetConf", "Error on reading rule file")
+		logging.HandleError(err, "Yamler - GetConf", "Error on reading rule file")
 	}
 	c.Enabled = true // Default value is: Enabled
 	err = yaml.Unmarshal(yamlFile, &c)
 	if err != nil {
-		nuvolaerror.HandleError(err, "Yamler - GetConf", "Umarshalling yamlFile")
+		logging.HandleError(err, "Yamler - GetConf", "Umarshalling yamlFile")
 	}
 
 	return c
@@ -62,7 +61,7 @@ func PrepareQuery(config *Conf) (query string, arguments map[string]interface{})
 			query = preparePathQuery(config, arguments)
 		}
 	} else {
-		nuvolaerror.HandleError(nil, "Yamler - PrepareQuery", "Malformed rule!")
+		logging.HandleError(nil, "Yamler - PrepareQuery", "Malformed rule!")
 	}
 	return query, arguments
 }

@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 type EC2Client struct {
@@ -46,10 +45,10 @@ func ListAndSaveRegions(cfg aws.Config) {
 
 		output, err := ec2Client.DescribeRegions(context.TODO(), &ec2.DescribeRegionsInput{})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleError(err, "EC2", "ListAndSaveRegions")
+			logging.HandleError(err, "EC2", "ListAndSaveRegions")
 		}
 		if output == nil {
-			nuvolaerror.HandleError(errors.New("invalid profile or credentials"), "EC2", "ListAndSaveRegions")
+			logging.HandleError(errors.New("invalid profile or credentials"), "EC2", "ListAndSaveRegions")
 		} else {
 			for _, region := range output.Regions {
 				Regions = append(Regions, aws.ToString(region.RegionName))

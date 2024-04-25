@@ -4,14 +4,13 @@ import (
 	"context"
 	"os"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/primait/nuvola/connector/services/aws/database"
 	"github.com/primait/nuvola/connector/services/aws/ec2"
 	"github.com/primait/nuvola/connector/services/aws/iam"
 	"github.com/primait/nuvola/connector/services/aws/lambda"
 	"github.com/primait/nuvola/connector/services/aws/s3"
 	"github.com/primait/nuvola/connector/services/aws/sts"
+	"github.com/primait/nuvola/pkg/io/logging"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
@@ -93,7 +92,7 @@ func (ac *AWSConfig) DumpBuckets() interface{} {
 func (ac *AWSConfig) DumpEC2Instances() interface{} {
 	ec2s, err := ec2.ListInstances(ac.Config)
 	if err != nil {
-		nuvolaerror.HandleError(err, "EC2", "")
+		logging.HandleError(err, "EC2", "")
 	}
 	return ec2s
 }
@@ -109,7 +108,7 @@ func (ac *AWSConfig) DumpLambdas() interface{} {
 func (ac *AWSConfig) DumpRDS() interface{} {
 	rds, err := database.ListRDS(ac.Config)
 	if err != nil {
-		nuvolaerror.HandleError(err, "RDS", "")
+		logging.HandleError(err, "RDS", "")
 	}
 	return rds
 }

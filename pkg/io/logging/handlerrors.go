@@ -1,4 +1,4 @@
-package nuvolaerror
+package logging
 
 import (
 	"fmt"

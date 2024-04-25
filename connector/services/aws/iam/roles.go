@@ -9,11 +9,10 @@ import (
 	"sort"
 	"sync"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/primait/nuvola/pkg/io/logging"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -30,7 +29,7 @@ func ListRoles(cfg aws.Config) (roles []*Role) {
 		wg.Add(1)
 		go func(role types.Role) {
 			if err := sem.Acquire(context.Background(), 1); err != nil {
-				nuvolaerror.HandleError(err, "IAM - Roles", "ListRoles - Acquire Semaphore")
+				logging.HandleError(err, "IAM - Roles", "ListRoles - Acquire Semaphore")
 			}
 
 			defer sem.Release(1)
@@ -42,7 +41,7 @@ func ListRoles(cfg aws.Config) (roles []*Role) {
 			decodedValue, _ := url.QueryUnescape(*role.AssumeRolePolicyDocument)
 			err := json.Unmarshal([]byte(decodedValue), &assumeRoleDocument)
 			if err != nil {
-				nuvolaerror.HandleError(err, "IAM - Roles", "Umarshalling assumeRoleDocument")
+				logging.HandleError(err, "IAM - Roles", "Umarshalling assumeRoleDocument")
 			}
 
 			// Sort Service object in the AssumeRolePolicyDocument; useful to diff different JSON outputs
@@ -116,7 +115,7 @@ func listRoles() []types.Role {
 			MaxItems: aws.Int32(300),
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Roles", "ListRoles")
+			logging.HandleAWSError(re, "IAM - Roles", "ListRoles")
 		}
 
 		collectedRoles = append(collectedRoles, roleOutput.Roles...)
@@ -140,7 +139,7 @@ func listInstanceProfiles() []types.InstanceProfile {
 			MaxItems: aws.Int32(300),
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Roles", "ListInstanceProfiles")
+			logging.HandleAWSError(re, "IAM - Roles", "ListInstanceProfiles")
 		}
 
 		collectedInstanceProfiles = append(collectedInstanceProfiles, roleOutput.InstanceProfiles...)
