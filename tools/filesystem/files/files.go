@@ -8,18 +8,17 @@ import (
 	"regexp"
 	"strings"
 
-	cli "github.com/primait/nuvola/tools/cli/output"
-	nuvolaerror "github.com/primait/nuvola/tools/error"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 func PrettyJSONToFile(filePath string, fileName string, s interface{}) {
 	if err := os.MkdirAll(filePath, os.FileMode(0775)); err != nil {
-		nuvolaerror.HandleError(err, "Files - PrettyJSONToFile", "Error on creating/reading output folder")
+		logging.HandleError(err, "Files - PrettyJSONToFile", "Error on creating/reading output folder")
 	}
 
 	filePath = filePath + string(filepath.Separator) + fileName
-	if err := os.WriteFile(filePath, cli.PrettyJSON(s), 0600); err != nil {
-		nuvolaerror.HandleError(err, "Files - PrettyJSONToFile", "Error on writing file")
+	if err := os.WriteFile(filePath, logging.PrettyJSON(s), 0600); err != nil {
+		logging.HandleError(err, "Files - PrettyJSONToFile", "Error on writing file")
 	}
 }
 
@@ -37,7 +36,7 @@ func GetFiles(root, pattern string) []string {
 		return nil
 	})
 	if err != nil {
-		nuvolaerror.HandleError(err, "Files - GetFiles", "Error on reading file")
+		logging.HandleError(err, "Files - GetFiles", "Error on reading file")
 	}
 	return a
 }

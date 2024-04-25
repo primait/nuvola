@@ -4,11 +4,10 @@ import (
 	"strings"
 	"time"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	req "github.com/imroc/req/v3"
 	"github.com/itchyny/gojq"
 	"github.com/ohler55/ojg/oj"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 func SetActions() {
@@ -21,17 +20,17 @@ func SetActions() {
 		SetHeader("Cache-Control", "no-cache").
 		Do()
 	if response.Err != nil {
-		nuvolaerror.HandleError(response.Err, "AWS - SetActions", "Error on calling HTTP endpoint")
+		logging.HandleError(response.Err, "AWS - SetActions", "Error on calling HTTP endpoint")
 	}
 
 	resString := strings.Replace(response.String(), "app.PolicyEditorConfig=", "", 1)
 	obj, err := oj.ParseString(resString)
 	if err != nil {
-		nuvolaerror.HandleError(err, "AWS - SetActions", "Error on parsing output string")
+		logging.HandleError(err, "AWS - SetActions", "Error on parsing output string")
 	}
 	query, err := gojq.Parse(`.serviceMap[] | .StringPrefix as $prefix | .Actions[] | "\($prefix):\(.)"`)
 	if err != nil {
-		nuvolaerror.HandleError(err, "AWS - SetActions", "Error on mapping string to object")
+		logging.HandleError(err, "AWS - SetActions", "Error on mapping string to object")
 	}
 
 	iter := query.Run(obj)
@@ -42,7 +41,7 @@ func SetActions() {
 			break
 		}
 		if err, ok := v.(error); ok {
-			nuvolaerror.HandleError(err, "AWS - SetActions", "Error on itering over objects")
+			logging.HandleError(err, "AWS - SetActions", "Error on itering over objects")
 		}
 
 		ActionsList = append(ActionsList, v.(string))

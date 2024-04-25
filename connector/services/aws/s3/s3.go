@@ -8,9 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/primait/nuvola/connector/services/aws/ec2"
+	"github.com/primait/nuvola/pkg/io/logging"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
@@ -29,14 +28,14 @@ func ListBuckets(cfg aws.Config) (buckets []*Bucket) {
 
 	output, err := s3Client.client.ListBuckets(context.TODO(), &s3.ListBucketsInput{})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "S3", "ListBuckets")
+		logging.HandleAWSError(re, "S3", "ListBuckets")
 	}
 
 	for _, bucket := range output.Buckets {
 		wg.Add(1)
 		go func(bucket types.Bucket) {
 			if err := sem.Acquire(context.Background(), 1); err != nil {
-				nuvolaerror.HandleError(err, "S3", "ListBuckets - Acquire Semaphore")
+				logging.HandleError(err, "S3", "ListBuckets - Acquire Semaphore")
 			}
 			defer sem.Release(1)
 			defer mu.Unlock()
@@ -97,7 +96,7 @@ func (sc *S3Client) getBucketPolicy(bucket *string) (policy s3PolicyDocument) {
 	if output != nil {
 		err := json.Unmarshal([]byte(aws.ToString(output.Policy)), &policy)
 		if err != nil {
-			nuvolaerror.HandleError(err, "S3", "getBucketPolicy")
+			logging.HandleError(err, "S3", "getBucketPolicy")
 		}
 	}
 	return
@@ -179,7 +178,7 @@ func handleErrors(err error, retry func() interface{}) (output interface{}) {
 				return retry()
 			}
 		default:
-			nuvolaerror.HandleAWSError(re, "S3", "handleErrors")
+			logging.HandleAWSError(re, "S3", "handleErrors")
 		}
 	}
 	return

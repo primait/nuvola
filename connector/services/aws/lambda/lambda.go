@@ -6,9 +6,8 @@ import (
 	"errors"
 	"sync"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/primait/nuvola/connector/services/aws/ec2"
+	"github.com/primait/nuvola/pkg/io/logging"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/transport/http"
@@ -40,14 +39,14 @@ func (lc *LambdaClient) listFunctionsForRegion() (lambdas []*Lambda) {
 	output, err := lc.client.ListFunctions(context.TODO(), &lambda.ListFunctionsInput{})
 
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "Lambda", "ListFunctions")
+		logging.HandleAWSError(re, "Lambda", "ListFunctions")
 	}
 
 	for _, lambda := range output.Functions {
 		wg.Add(1)
 		go func(lambda types.FunctionConfiguration) {
 			if err := sem.Acquire(context.Background(), 1); err != nil {
-				nuvolaerror.HandleError(err, "Lambda", "listFunctionsForRegion - Acquire Semaphore")
+				logging.HandleError(err, "Lambda", "listFunctionsForRegion - Acquire Semaphore")
 			}
 			defer sem.Release(1)
 			defer wg.Done()
@@ -70,7 +69,7 @@ func (lc *LambdaClient) getFunctionCodeLocation(name string) types.FunctionCodeL
 		FunctionName: &name,
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "Lambda", "GetFunction")
+		logging.HandleAWSError(re, "Lambda", "GetFunction")
 	}
 
 	return *output.Code
@@ -84,7 +83,7 @@ func (lc *LambdaClient) getPolicy(name string) (policyDocument lambdaPolicyDocum
 	})
 	if errors.As(err, &re) {
 		if re.HTTPStatusCode() != 404 { // Function can't have a policy
-			nuvolaerror.HandleAWSError(re, "Lambda", "GetPolicy")
+			logging.HandleAWSError(re, "Lambda", "GetPolicy")
 		}
 		return policyDocument
 	}
@@ -92,7 +91,7 @@ func (lc *LambdaClient) getPolicy(name string) (policyDocument lambdaPolicyDocum
 	if output.Policy != nil {
 		err := json.Unmarshal([]byte(aws.ToString(output.Policy)), &policyDocument)
 		if err != nil {
-			nuvolaerror.HandleError(err, "Lambda", "Umarshalling policyDocument")
+			logging.HandleError(err, "Lambda", "Umarshalling policyDocument")
 		}
 	}
 

@@ -5,21 +5,23 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
-	print "github.com/primait/nuvola/tools/cli/output"
-	nuvolaerror "github.com/primait/nuvola/tools/error"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 func Zip(path string, profile string, values *map[string]interface{}) {
 	today := time.Now().Format("20060102")
-	filePtr, err := os.Create(fmt.Sprintf("%s%snuvola-%s_%s.zip", path, string(filepath.Separator), profile, today))
+	fileSeparator := string(filepath.Separator)
+	profile = filepath.Clean(strings.Replace(profile, fileSeparator, "-", -1))
+	filePtr, err := os.Create(fmt.Sprintf("%s%snuvola-%s_%s.zip", filepath.Clean(path), fileSeparator, profile, today))
 	if err != nil {
-		nuvolaerror.HandleError(err, "Zip", "Error on creating output folder")
+		logging.HandleError(err, "Zip", "Error on creating output folder")
 	}
 	defer func() {
 		if err := filePtr.Close(); err != nil {
-			nuvolaerror.HandleError(err, "Zip", "Error closing file")
+			logging.HandleError(err, "Zip", "Error closing file")
 		}
 	}()
 
@@ -32,9 +34,9 @@ func Zip(path string, profile string, values *map[string]interface{}) {
 			fmt.Println(err)
 		}
 
-		_, err = writer.Write(print.PrettyJSON(value))
+		_, err = writer.Write(logging.PrettyJSON(value))
 		if err != nil {
-			nuvolaerror.HandleError(err, "Zip", "Error on writing file content")
+			logging.HandleError(err, "Zip", "Error on writing file content")
 		}
 	}
 }
@@ -42,7 +44,7 @@ func Zip(path string, profile string, values *map[string]interface{}) {
 func UnzipInMemory(zipfile string) (r *zip.ReadCloser) {
 	r, err := zip.OpenReader(zipfile)
 	if err != nil {
-		nuvolaerror.HandleError(err, "Zip", "Error on opening ZIP file")
+		logging.HandleError(err, "Zip", "Error on opening ZIP file")
 	}
 	return
 }

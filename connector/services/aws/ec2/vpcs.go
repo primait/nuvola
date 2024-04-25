@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 func ListVpcs(cfg aws.Config) (vpcs *VPC) {
@@ -31,14 +30,14 @@ func (ec *EC2Client) getVpcs() (vpcs *VPC) {
 		MaxResults: aws.Int32(1000),
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "EC2 - VPC", "DescribeVpcs")
+		logging.HandleAWSError(re, "EC2 - VPC", "DescribeVpcs")
 	}
 
 	peeringOutput, err := ec.client.DescribeVpcPeeringConnections(context.TODO(), &ec2.DescribeVpcPeeringConnectionsInput{
 		MaxResults: aws.Int32(1000),
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "EC2 - VPC", "DescribeVpcPeeringConnections")
+		logging.HandleAWSError(re, "EC2 - VPC", "DescribeVpcPeeringConnections")
 	}
 
 	for i := 0; i < len(vpcsOutput.Vpcs); i++ {

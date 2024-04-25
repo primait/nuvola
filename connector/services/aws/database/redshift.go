@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/primait/nuvola/connector/services/aws/ec2"
+	"github.com/primait/nuvola/pkg/io/logging"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
@@ -35,7 +34,7 @@ func ListRedshiftDBs(cfg aws.Config) (redshiftDBs []*RedshiftDB) {
 func (rc *RedshiftClient) listRedshiftClustersForRegion() (clusters []types.Cluster) {
 	output, err := rc.client.DescribeClusters(context.TODO(), &redshift.DescribeClustersInput{})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "Redshift", "DescribeClusters")
+		logging.HandleAWSError(re, "Redshift", "DescribeClusters")
 	}
 
 	clusters = output.Clusters

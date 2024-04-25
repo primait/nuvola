@@ -8,12 +8,11 @@ import (
 	"net/url"
 	"strings"
 
-	nuvolaerror "github.com/primait/nuvola/tools/error"
-
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	aat "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 var VALIDATE = false
@@ -29,7 +28,7 @@ func (ic *IAMClient) ValidatePolicy(policy string) (findings []aat.ValidatePolic
 		PolicyType:     aat.PolicyTypeIdentityPolicy,
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "IAM - Policies", "ValidatePolicy")
+		logging.HandleAWSError(re, "IAM - Policies", "ValidatePolicy")
 	}
 
 	if output != nil && len(output.Findings) > 0 {
@@ -55,7 +54,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 			RoleName: &identity,
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Policies", "ListRolePolicies")
+			logging.HandleAWSError(re, "IAM - Policies", "ListRolePolicies")
 		}
 		policies = attachedPolicies.PolicyNames
 	case object == "user":
@@ -64,7 +63,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 			UserName: &identity,
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Policies", "ListUserPolicies")
+			logging.HandleAWSError(re, "IAM - Policies", "ListUserPolicies")
 		}
 		policies = attachedPolicies.PolicyNames
 	case object == "group":
@@ -73,11 +72,11 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 			GroupName: &identity,
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Policies", "ListGroupPolicies")
+			logging.HandleAWSError(re, "IAM - Policies", "ListGroupPolicies")
 		}
 		policies = attachedPolicies.PolicyNames
 	default:
-		nuvolaerror.HandleError(nil, "IAM - Policies", "FAILED: no user/role/group defined")
+		logging.HandleError(nil, "IAM - Policies", "FAILED: no user/role/group defined")
 	}
 
 	for i := range policies {
@@ -89,7 +88,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 				RoleName:   &identity,
 			})
 			if errors.As(err, &re) {
-				nuvolaerror.HandleAWSError(re, "IAM - Policies", "GetRolePolicy")
+				logging.HandleAWSError(re, "IAM - Policies", "GetRolePolicy")
 			}
 			decodedValue, _ = url.QueryUnescape(*inlinePolicy.PolicyDocument)
 		case object == "user":
@@ -99,7 +98,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 				UserName:   &identity,
 			})
 			if errors.As(err, &re) {
-				nuvolaerror.HandleAWSError(re, "IAM - Policies", "GetUserPolicy")
+				logging.HandleAWSError(re, "IAM - Policies", "GetUserPolicy")
 			}
 			decodedValue, _ = url.QueryUnescape(*inlinePolicy.PolicyDocument)
 		case object == "group":
@@ -109,16 +108,16 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 				GroupName:  &identity,
 			})
 			if errors.As(err, &re) {
-				nuvolaerror.HandleAWSError(re, "IAM - Policies", "GetGroupPolicy")
+				logging.HandleAWSError(re, "IAM - Policies", "GetGroupPolicy")
 			}
 			decodedValue, _ = url.QueryUnescape(*inlinePolicy.PolicyDocument)
 		default:
-			nuvolaerror.HandleError(nil, "IAM - Policies", "FAILED: no user/role/group defined")
+			logging.HandleError(nil, "IAM - Policies", "FAILED: no user/role/group defined")
 		}
 
 		err := json.Unmarshal([]byte(decodedValue), &policyVersionDocument)
 		if err != nil {
-			nuvolaerror.HandleError(nil, "IAM - Policies", "Error on Unmarshalling policyVersionDocument")
+			logging.HandleError(nil, "IAM - Policies", "Error on Unmarshalling policyVersionDocument")
 		}
 		policyVersionDocument.PolicyName = policies[i]
 		policyVersionDocument.Validation = ic.ValidatePolicy(decodedValue)
@@ -141,7 +140,7 @@ func (ic *IAMClient) listPolicyVersions(policyArn *string) (policyVersions []Pol
 		MaxItems:  &maxItems,
 	})
 	if errors.As(err, &re) {
-		nuvolaerror.HandleAWSError(re, "IAM - Policies", "ListPolicyVersions")
+		logging.HandleAWSError(re, "IAM - Policies", "ListPolicyVersions")
 	}
 
 	for _, policyVersion := range versions.Versions {
@@ -150,12 +149,12 @@ func (ic *IAMClient) listPolicyVersions(policyArn *string) (policyVersions []Pol
 			VersionId: policyVersion.VersionId,
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Policies", "GetPolicyVersion")
+			logging.HandleAWSError(re, "IAM - Policies", "GetPolicyVersion")
 		}
 		decodedValue, _ := url.QueryUnescape(*pv.PolicyVersion.Document)
 		err = json.Unmarshal([]byte(decodedValue), &policyVersionDocument)
 		if err != nil {
-			nuvolaerror.HandleError(err, "IAM - Policies", "Umarshalling policyVersionDocument")
+			logging.HandleError(err, "IAM - Policies", "Umarshalling policyVersionDocument")
 		}
 		policyVersions = append(policyVersions, PolicyVersion{
 			PolicyVersion: policyVersion,
@@ -179,7 +178,7 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 			RoleName: &identity,
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Policies", "ListAttachedRolePolicies")
+			logging.HandleAWSError(re, "IAM - Policies", "ListAttachedRolePolicies")
 		}
 		output = attachedPolicies.AttachedPolicies
 	case object == "user":
@@ -188,7 +187,7 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 			UserName: &identity,
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Policies", "ListAttachedUserPolicies")
+			logging.HandleAWSError(re, "IAM - Policies", "ListAttachedUserPolicies")
 		}
 		output = attachedPolicies.AttachedPolicies
 	case object == "group":
@@ -197,18 +196,18 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 			GroupName: &identity,
 		})
 		if errors.As(err, &re) {
-			nuvolaerror.HandleAWSError(re, "IAM - Policies", "ListAttachedGroupPolicies")
+			logging.HandleAWSError(re, "IAM - Policies", "ListAttachedGroupPolicies")
 		}
 		output = attachedPolicies.AttachedPolicies
 	default:
-		nuvolaerror.HandleError(nil, "IAM - Policies", "FAILED: no user/role/group defined")
+		logging.HandleError(nil, "IAM - Policies", "FAILED: no user/role/group defined")
 	}
 
 	for _, policy := range output {
 		policyVersions := ic.listPolicyVersions(policy.PolicyArn)
 		policyDocument, errj := json.Marshal(policyVersions[0].Document)
 		if errj != nil {
-			nuvolaerror.HandleError(errj, "IAM - Policies", "Umarshalling policyVersions[0].Document")
+			logging.HandleError(errj, "IAM - Policies", "Umarshalling policyVersions[0].Document")
 		}
 
 		expandActions(&policyVersions[0].Document, identity)
@@ -239,7 +238,7 @@ func expandActions(policy *PolicyDocument, identity any) {
 				realActions = append(realActions, getActionsStartingWith(v)...)
 			default:
 				policyJSON, _ := json.Marshal(policy)
-				nuvolaerror.HandleError(
+				logging.HandleError(
 					nil,
 					"IAM - Policies",
 					fmt.Sprintf("expandActions\nError: wrong syntax on policy statement %v\nPlease check your policies for \"%v\" principal or open an issue\ntype: %v",
@@ -263,7 +262,7 @@ func expandActions(policy *PolicyDocument, identity any) {
 				realActions = removeFromList(realActions, getActionsStartingWith(v))
 			default:
 				policyJSON, _ := json.Marshal(policy)
-				nuvolaerror.HandleError(
+				logging.HandleError(
 					nil,
 					"IAM - Policies",
 					fmt.Sprintf("expandActions\nError: wrong syntax on policy statement %v\nPlease check your policies for \"%v\" principal or open an issue\ntype: %v",
