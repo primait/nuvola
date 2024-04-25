@@ -18,7 +18,7 @@ import (
 
 var assessCmd = &cobra.Command{
 	Use:   "assess",
-	Short: "Execute assessment queries agains data loaded in Neo4J",
+	Short: "Execute assessment queries against data loaded in Neo4J",
 	Run: func(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Changed(flagVerbose) {
 			logger.SetVerboseLevel()
