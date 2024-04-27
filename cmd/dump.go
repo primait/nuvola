@@ -6,8 +6,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/primait/nuvola/connector"
-	"github.com/primait/nuvola/pkg/io/logging"
+	"github.com/primait/nuvola/pkg/connector"
 	"github.com/primait/nuvola/tools/filesystem/files"
 	"github.com/primait/nuvola/tools/filesystem/zip"
 	"github.com/spf13/cobra"
@@ -33,10 +32,6 @@ var dumpCmd = &cobra.Command{
 	Short: "Dump AWS resources and policies information and store them in Neo4j",
 	Run: func(cmd *cobra.Command, args []string) {
 		startTime := time.Now()
-		markAsRequired("aws-profile")
-		if err := rootCmd.ValidateRequiredFlags(); err != nil {
-			logger.Error("Required flags not provided", "err", err)
-		}
 		if cmd.Flags().Changed(flagVerbose) {
 			logger.SetVerboseLevel()
 		}
@@ -60,7 +55,7 @@ var dumpCmd = &cobra.Command{
 	},
 }
 
-func dumpData(storageConnector *connector.StorageConnector, cloudConnector *connector.CloudConnector) map[string]interface{} {
+func dumpData(storageConnector *connector.StorageConnector, cloudConnector *connector.CloudConnector) {
 	dataChan := make(chan map[string]interface{})
 	go cloudConnector.DumpAll("aws", dataChan)
 	for {
@@ -77,7 +72,6 @@ func dumpData(storageConnector *connector.StorageConnector, cloudConnector *conn
 		storageConnector.ImportResults(mapKey, obj)
 		AWSResults[mapKey] = a[mapKey]
 	}
-	return AWSResults
 }
 
 func saveResults(awsProfile string, outputDir string, outputFormat string) {
@@ -90,8 +84,6 @@ func saveResults(awsProfile string, outputDir string, outputFormat string) {
 
 	today := time.Now().Format("20060102")
 	for key, value := range AWSResults {
-		logger.Info(key, logging.PrettyJSON(value))
-
 		if outputFormat == "json" {
 			files.PrettyJSONToFile(outputDir, fmt.Sprintf("%s_%s.json", key, today), value)
 		}

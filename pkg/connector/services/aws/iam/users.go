@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,17 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/gocarina/gocsv"
 	"github.com/primait/nuvola/pkg/io/logging"
-	"golang.org/x/sync/semaphore"
+	"github.com/sourcegraph/conc/iter"
 )
 
 // aws iam list-users
 func ListUsers(cfg aws.Config, credentialReport map[string]*CredentialReport) (users []*User) {
-	var (
-		mu  = &sync.Mutex{}
-		sem = semaphore.NewWeighted(int64(30))
-		wg  sync.WaitGroup
-	)
-
 	if len(credentialReport) > 0 {
 		rootAccount := credentialReport["<root_account>"]
 		rootDate, _ := time.Parse("2006-01-02T15:04:05+00:00", rootAccount.UserCreation)
@@ -43,39 +36,26 @@ func ListUsers(cfg aws.Config, credentialReport map[string]*CredentialReport) (u
 		})
 	}
 
-	for _, user := range listUsers() {
-		wg.Add(1)
-		go func(user types.User) {
-			if err := sem.Acquire(context.Background(), 1); err != nil {
-				logging.HandleError(err, "IAM - Users", "ListUsers - Acquire Semaphore")
-			}
-			defer sem.Release(1)
-			defer mu.Unlock()
-			defer wg.Done()
+	users = append(users, iter.Map(listUsers(), func(user *types.User) *User {
+		groups := iamClient.listGroupsForUser(aws.ToString(user.UserName))
+		inline := iamClient.listInlinePolicies(aws.ToString(user.UserName), "user")
+		attached := iamClient.listAttachedPolicies(aws.ToString(user.UserName), "user")
+		accessKeys := iamClient.listAccessKeys(aws.ToString(user.UserName))
+		loginProfile := iamClient.listLoginProfile(aws.ToString(user.UserName))
 
-			groups := iamClient.listGroupsForUser(aws.ToString(user.UserName))
-			inline := iamClient.listInlinePolicies(aws.ToString(user.UserName), "user")
-			attached := iamClient.listAttachedPolicies(aws.ToString(user.UserName), "user")
-			accessKeys := iamClient.listAccessKeys(aws.ToString(user.UserName))
-			loginProfile := iamClient.listLoginProfile(aws.ToString(user.UserName))
-
-			userAccount := credentialReport[aws.ToString(user.UserName)]
-			var item = &User{
-				User:                user,
-				Groups:              groups,
-				AccessKeys:          accessKeys,
-				LoginProfile:        loginProfile,
-				InlinePolicies:      inline,
-				AttachedPolicies:    attached,
-				PasswordEnabled:     userAccount.PasswordEnabled,
-				PasswordLastChanged: userAccount.PasswordLastChanged,
-				MfaActive:           userAccount.MfaActive,
-			}
-			mu.Lock()
-			users = append(users, item)
-		}(user)
-	}
-	wg.Wait()
+		userAccount := credentialReport[aws.ToString(user.UserName)]
+		return &User{
+			User:                *user,
+			Groups:              groups,
+			AccessKeys:          accessKeys,
+			LoginProfile:        loginProfile,
+			InlinePolicies:      inline,
+			AttachedPolicies:    attached,
+			PasswordEnabled:     userAccount.PasswordEnabled,
+			PasswordLastChanged: userAccount.PasswordLastChanged,
+			MfaActive:           userAccount.MfaActive,
+		}
+	})...)
 
 	sort.Slice(users, func(i, j int) bool {
 		return aws.ToString(users[i].UserName) < aws.ToString(users[j].UserName)

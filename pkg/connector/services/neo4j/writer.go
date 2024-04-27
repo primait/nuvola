@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	awsconfig "github.com/primait/nuvola/connector/services/aws"
-	servicesDatabase "github.com/primait/nuvola/connector/services/aws/database"
-	servicesEC2 "github.com/primait/nuvola/connector/services/aws/ec2"
-	servicesIAM "github.com/primait/nuvola/connector/services/aws/iam"
-	servicesLambda "github.com/primait/nuvola/connector/services/aws/lambda"
-	servicesS3 "github.com/primait/nuvola/connector/services/aws/s3"
+	awsconfig "github.com/primait/nuvola/pkg/connector/services/aws"
+	servicesDatabase "github.com/primait/nuvola/pkg/connector/services/aws/database"
+	servicesEC2 "github.com/primait/nuvola/pkg/connector/services/aws/ec2"
+	servicesIAM "github.com/primait/nuvola/pkg/connector/services/aws/iam"
+	servicesLambda "github.com/primait/nuvola/pkg/connector/services/aws/lambda"
+	servicesS3 "github.com/primait/nuvola/pkg/connector/services/aws/s3"
 	"github.com/primait/nuvola/pkg/io/logging"
 
 	"strings"

@@ -64,6 +64,6 @@ stop-containers:
 	@docker compose down -v
 	@docker compose rm -fv
 
-.PHONY: tests
-tests: start-containers build
+.PHONY: test
+test: start-containers build
 	cd ./assets/ && $(MAKE) -C tests all

@@ -32,7 +32,7 @@ func GetLogManager() LogManager {
 		logger = &logManager{
 			logger: log.NewWithOptions(os.Stdout, log.Options{
 				CallerOffset:    1,
-				Level:           log.WarnLevel,
+				Level:           log.InfoLevel,
 				ReportCaller:    true,
 				ReportTimestamp: true,
 				TimeFormat:      time.RFC1123,

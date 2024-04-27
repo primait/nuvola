@@ -8,7 +8,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/primait/nuvola/connector"
+	"github.com/primait/nuvola/pkg/connector"
 	"github.com/primait/nuvola/pkg/io/logging"
 	"github.com/primait/nuvola/tools/filesystem/files"
 	unzip "github.com/primait/nuvola/tools/filesystem/zip"
@@ -29,7 +29,7 @@ var assessCmd = &cobra.Command{
 
 		connector.SetActions()
 		storageConnector := connector.NewStorageConnector()
-		if importFile != "" && !noImport {
+		if importFile != "" {
 			logger.Info("Flushing database")
 			logger.Info(fmt.Sprintf("Importing %s", importFile))
 			importZipFile(storageConnector, importFile)

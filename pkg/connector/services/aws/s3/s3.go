@@ -6,51 +6,33 @@ import (
 	"errors"
 	"sort"
 	"strings"
-	"sync"
 
-	"github.com/primait/nuvola/connector/services/aws/ec2"
+	"github.com/primait/nuvola/pkg/connector/services/aws/ec2"
 	"github.com/primait/nuvola/pkg/io/logging"
+	"github.com/sourcegraph/conc/iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"golang.org/x/sync/semaphore"
 )
 
 func ListBuckets(cfg aws.Config) (buckets []*Bucket) {
-	var (
-		s3Client = S3Client{Config: cfg, client: s3.NewFromConfig(cfg, func(o *s3.Options) { o.UsePathStyle = true })}
-		mu       = &sync.Mutex{}
-		sem      = semaphore.NewWeighted(int64(15))
-		wg       sync.WaitGroup
-	)
+	s3Client := S3Client{Config: cfg, client: s3.NewFromConfig(cfg, func(o *s3.Options) { o.UsePathStyle = true })}
 
 	output, err := s3Client.client.ListBuckets(context.TODO(), &s3.ListBucketsInput{})
 	if errors.As(err, &re) {
 		logging.HandleAWSError(re, "S3", "ListBuckets")
 	}
 
-	for _, bucket := range output.Buckets {
-		wg.Add(1)
-		go func(bucket types.Bucket) {
-			if err := sem.Acquire(context.Background(), 1); err != nil {
-				logging.HandleError(err, "S3", "ListBuckets - Acquire Semaphore")
-			}
-			defer sem.Release(1)
-			defer mu.Unlock()
-			defer wg.Done()
-			var item = &Bucket{
-				Bucket:    bucket,
-				Policy:    s3Client.getBucketPolicy(bucket.Name),
-				ACL:       s3Client.listBucketACL(bucket.Name),
-				Encrypted: s3Client.getEncryptionStatus(bucket.Name),
-			}
-			mu.Lock()
-			buckets = append(buckets, item)
-		}(bucket)
-	}
-	wg.Wait()
+	buckets = iter.Map(output.Buckets, func(bucket *types.Bucket) *Bucket {
+		return &Bucket{
+			Bucket:    *bucket,
+			Policy:    s3Client.getBucketPolicy(bucket.Name),
+			ACL:       s3Client.listBucketACL(bucket.Name),
+			Encrypted: s3Client.getEncryptionStatus(bucket.Name),
+		}
+	})
 
 	sort.Slice(buckets, func(i, j int) bool {
 		return aws.ToString(buckets[i].Name) < aws.ToString(buckets[j].Name)
