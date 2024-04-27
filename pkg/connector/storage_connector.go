@@ -49,7 +49,7 @@ func (sc *StorageConnector) ImportResults(what string, content []byte) {
 	var dynamodbs = regexp.MustCompile(`^DynamoDBs`)
 	var redshiftdbs = regexp.MustCompile(`^RedshiftDBs`)
 
-	logging.PrintDarkGreen(fmt.Sprintf("Importing: %s", what))
+	logging.GetLogManager().Info(fmt.Sprintf("Importing: %s", what))
 	switch {
 	case whoami.MatchString(what):
 	case credentialReport.MatchString(what):
@@ -97,6 +97,7 @@ func (sc *StorageConnector) ImportResults(what string, content []byte) {
 	default:
 		logging.HandleError(nil, "ImportResults", "Error importing data")
 	}
+	logging.GetLogManager().Info(fmt.Sprintf("Imported: %s", what))
 }
 
 func (sc *StorageConnector) ImportBulkResults(content map[string]interface{}) {
