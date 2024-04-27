@@ -132,7 +132,7 @@ func flatObjects[N EnumAWSTypes](o []N) (result map[string]interface{}) {
 			OmitEmpty: true,
 		})
 		flatObject := make(map[string]interface{})
-		oj.Unmarshal([]byte(flat), &flatObject)
+		_ = oj.Unmarshal([]byte(flat), &flatObject)
 		items = append(items, flatObject)
 	}
 
