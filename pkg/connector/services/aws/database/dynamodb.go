@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/primait/nuvola/connector/services/aws/ec2"
+	"github.com/primait/nuvola/pkg/connector/services/aws/ec2"
 	"github.com/primait/nuvola/pkg/io/logging"
 
 	"github.com/aws/aws-sdk-go-v2/aws"

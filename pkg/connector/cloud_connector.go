@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	awsconfig "github.com/primait/nuvola/connector/services/aws"
+	awsconfig "github.com/primait/nuvola/pkg/connector/services/aws"
 )
 
 func NewCloudConnector(profile string, endpointUrl string) (*CloudConnector, error) {

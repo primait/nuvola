@@ -4,14 +4,13 @@ import (
 	"context"
 	b64 "encoding/base64"
 	"errors"
-	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/primait/nuvola/pkg/io/logging"
-	"golang.org/x/sync/semaphore"
+	"github.com/sourcegraph/conc/iter"
 )
 
 func ListInstances(cfg aws.Config) (ec2s []*Instance, err *awshttp.ResponseError) {
@@ -27,12 +26,6 @@ func ListInstances(cfg aws.Config) (ec2s []*Instance, err *awshttp.ResponseError
 }
 
 func (ec *EC2Client) listInstancesForRegion() (ec2s []*Instance) {
-	var (
-		mu  = &sync.Mutex{}
-		sem = semaphore.NewWeighted(int64(15))
-		wg  sync.WaitGroup
-	)
-
 	output, err := ec.client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
 		MaxResults: aws.Int32(1000),
 		Filters: []types.Filter{{
@@ -44,30 +37,24 @@ func (ec *EC2Client) listInstancesForRegion() (ec2s []*Instance) {
 		logging.HandleAWSError(re, "EC2", "listInstancesForRegion")
 	}
 
-	for _, instances := range output.Reservations {
-		wg.Add(1)
-		go func(instances types.Reservation) {
-			if err := sem.Acquire(context.Background(), 1); err != nil {
-				logging.HandleError(err, "EC2", "listInstancesForRegion - Acquire Semaphore")
-			}
-			defer sem.Release(1)
-			defer wg.Done()
-			var instancesSlice []*Instance
-			for _, instance := range instances.Instances {
-				userData := ec.getInstanceUserDataAttribute(aws.ToString(instance.InstanceId))
-				instancesSlice = append(instancesSlice, &Instance{
-					Instance:          instance,
-					UserData:          userData,
-					NetworkInterfaces: ec.getNetworkInterfacesWithGroups(instance.NetworkInterfaces),
-					InstanceState:     ec.getInstanceState(aws.ToString(instance.InstanceId)),
-				})
-			}
-			mu.Lock()
-			defer mu.Unlock()
-			ec2s = append(ec2s, instancesSlice...)
-		}(instances)
+	ec2s = make([]*Instance, 0, len(output.Reservations))
+	instances := iter.Map(output.Reservations, func(instances *types.Reservation) []*Instance {
+		var instancesSlice []*Instance
+		for _, instance := range instances.Instances {
+			userData := ec.getInstanceUserDataAttribute(aws.ToString(instance.InstanceId))
+			instancesSlice = append(instancesSlice, &Instance{
+				Instance:          instance,
+				UserData:          userData,
+				NetworkInterfaces: ec.getNetworkInterfacesWithGroups(instance.NetworkInterfaces),
+				InstanceState:     ec.getInstanceState(aws.ToString(instance.InstanceId)),
+			})
+		}
+		return instancesSlice
+	})
+
+	for _, instance := range instances {
+		ec2s = append(ec2s, instance...)
 	}
-	wg.Wait()
 	return
 }
 

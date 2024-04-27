@@ -8,12 +8,12 @@ import (
 
 	"github.com/primait/nuvola/pkg/io/logging"
 
-	"github.com/primait/nuvola/connector/services/aws/database"
-	"github.com/primait/nuvola/connector/services/aws/ec2"
-	"github.com/primait/nuvola/connector/services/aws/iam"
-	"github.com/primait/nuvola/connector/services/aws/lambda"
-	"github.com/primait/nuvola/connector/services/aws/s3"
-	neo4jconnector "github.com/primait/nuvola/connector/services/neo4j"
+	"github.com/primait/nuvola/pkg/connector/services/aws/database"
+	"github.com/primait/nuvola/pkg/connector/services/aws/ec2"
+	"github.com/primait/nuvola/pkg/connector/services/aws/iam"
+	"github.com/primait/nuvola/pkg/connector/services/aws/lambda"
+	"github.com/primait/nuvola/pkg/connector/services/aws/s3"
+	neo4jconnector "github.com/primait/nuvola/pkg/connector/services/neo4j"
 )
 
 func NewStorageConnector() *StorageConnector {
