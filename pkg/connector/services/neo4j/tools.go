@@ -3,7 +3,6 @@ package neo4j_connector
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -18,7 +17,8 @@ import (
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/notdodo/arner"
-	"github.com/notdodo/goflat"
+	"github.com/notdodo/goflat/v2"
+	"github.com/ohler55/ojg/oj"
 )
 
 type EnumAWSTypes interface {
@@ -121,14 +121,19 @@ func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]s
 
 func flatObjects[N EnumAWSTypes](o []N) (result map[string]interface{}) {
 	result = make(map[string]interface{}, 0)
-	items := make([]map[string]interface{}, 0)
+	items := make([]map[string]interface{}, 0, len(o))
 
 	for _, obj := range o {
-		flat, err := goflat.FlatStruct(obj, "", "_")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		items = append(items, flat)
+		jsonString, _ := oj.Marshal(obj)
+		flat, _ := goflat.FlatJSON(string(jsonString), goflat.FlattenerConfig{
+			Prefix:    "",
+			Separator: "_",
+			OmitNil:   true,
+			OmitEmpty: true,
+		})
+		flatObject := make(map[string]interface{})
+		oj.Unmarshal([]byte(flat), &flatObject)
+		items = append(items, flatObject)
 	}
 
 	result["objects"] = items
