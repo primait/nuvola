@@ -12,6 +12,7 @@ import (
 	servicesLambda "github.com/primait/nuvola/pkg/connector/services/aws/lambda"
 	servicesS3 "github.com/primait/nuvola/pkg/connector/services/aws/s3"
 	"github.com/primait/nuvola/pkg/io/logging"
+	"github.com/sourcegraph/conc/iter"
 
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -121,9 +122,9 @@ func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]s
 
 func flatObjects[N EnumAWSTypes](o []N) (result map[string]interface{}) {
 	result = make(map[string]interface{}, 0)
-	items := make([]map[string]interface{}, 0, len(o))
+	result["objects"] = make([]map[string]interface{}, len(o))
 
-	for _, obj := range o {
+	items := iter.Map(o, func(obj *N) map[string]interface{} {
 		jsonString, _ := oj.Marshal(obj)
 		flat, _ := goflat.FlatJSON(string(jsonString), goflat.FlattenerConfig{
 			Prefix:    "",
@@ -133,9 +134,8 @@ func flatObjects[N EnumAWSTypes](o []N) (result map[string]interface{}) {
 		})
 		flatObject := make(map[string]interface{})
 		_ = oj.Unmarshal([]byte(flat), &flatObject)
-		items = append(items, flatObject)
-	}
-
+		return flatObject
+	})
 	result["objects"] = items
 	return
 }
