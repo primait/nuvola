@@ -124,8 +124,8 @@ github.com/notdodo/arner v0.0.0-20230222134658-4fe417a6cc9c h1:37kqfvmX/HFliADVj
 github.com/notdodo/arner v0.0.0-20230222134658-4fe417a6cc9c/go.mod h1:5iOlJjvEyWqP/mkg03kfzT1zvX/yuIPNgcD6fkPUT1Y=
 github.com/notdodo/goflat/v2 v2.1.1 h1:3MKdKmM2wE0l4exgNE/3CijAMVxezKWZxMLelyNqA0Q=
 github.com/notdodo/goflat/v2 v2.1.1/go.mod h1:nYYtKs9ZIPL/5we4eYyrErlyKTcgSSaeJK8SjqYtR9Y=
-github.com/ohler55/ojg v1.21.5 h1:Wfok9bfUImPFe3v6W61+Kz0j3fcjBt0NDVIpOtHAczQ=
-github.com/ohler55/ojg v1.21.5/go.mod h1:gQhDVpQLqrmnd2eqGAvJtn+NfKoYJbe/A4Sj3/Vro4o=
+github.com/ohler55/ojg v1.22.0 h1:McZObj3cD/Zz/ojzk5Pi5VvgQcagxmT1bVKNzhE5ihI=
+github.com/ohler55/ojg v1.22.0/go.mod h1:gQhDVpQLqrmnd2eqGAvJtn+NfKoYJbe/A4Sj3/Vro4o=
 github.com/onsi/ginkgo/v2 v2.17.2 h1:7eMhcy3GimbsA3hEnVKdw/PQM9XN9krpKVXsZdph0/g=
 github.com/onsi/ginkgo/v2 v2.17.2/go.mod h1:nP2DPOQoNsQmsVyv5rDA8JkXQoCs6goXIvr/PRJ1eCc=
 github.com/onsi/gomega v1.33.0 h1:snPCflnZrpMsy94p4lXVEkHo12lmPnc3vY5XBbreexE=

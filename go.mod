@@ -23,7 +23,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.20.0
 	github.com/notdodo/arner v0.0.0-20230222134658-4fe417a6cc9c
 	github.com/notdodo/goflat/v2 v2.1.1
-	github.com/ohler55/ojg v1.21.5
+	github.com/ohler55/ojg v1.22.0
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.8.0
 	golang.org/x/text v0.14.0
