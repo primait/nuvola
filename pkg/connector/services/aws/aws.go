@@ -36,7 +36,7 @@ func InitAWSConfiguration(profile string, awsEndpoint string) (awsc AWSConfig) {
 	}
 	awsc = AWSConfig{Profile: profile, Config: cfg}
 	SetActions()
-	// Get the AWS regions availabe dynamically
+	// Get the available AWS regions dynamically
 	ec2.ListAndSaveRegions(cfg)
 	iam.ActionsList = unique(ActionsList)
 	iam.ActionsMap = ActionsMap

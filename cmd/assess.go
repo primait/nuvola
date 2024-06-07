@@ -76,7 +76,8 @@ func processZipFile(connector *connector.StorageConnector, f *zip.File) error {
 	defer rc.Close()
 
 	buf := new(bytes.Buffer)
-	if _, err = io.Copy(buf, rc); err != nil { // #nosecG110
+	_, err = io.Copy(buf, rc) // #nosecG110
+	if err != nil {
 		return fmt.Errorf("copying buffer from ZIP: %w", err)
 	}
 
