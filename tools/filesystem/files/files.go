@@ -12,13 +12,14 @@ import (
 )
 
 func PrettyJSONToFile(filePath string, fileName string, s interface{}) {
+	logger := logging.GetLogManager()
 	if err := os.MkdirAll(filePath, os.FileMode(0775)); err != nil {
-		logging.HandleError(err, "Files - PrettyJSONToFile", "Error on creating/reading output folder")
+		logger.Error("Error on creating/reading output folder", "err", err)
 	}
 
 	filePath = filePath + string(filepath.Separator) + fileName
-	if err := os.WriteFile(filePath, logging.PrettyJSON(s), 0600); err != nil {
-		logging.HandleError(err, "Files - PrettyJSONToFile", "Error on writing file")
+	if err := os.WriteFile(filePath, logger.PrettyJSON(s), 0600); err != nil {
+		logger.Error("Error on writing file", "err", err)
 	}
 }
 
@@ -36,7 +37,7 @@ func GetFiles(root, pattern string) []string {
 		return nil
 	})
 	if err != nil {
-		logging.HandleError(err, "Files - GetFiles", "Error on reading file")
+		logging.GetLogManager().Error("Error on reading file", "err", err)
 	}
 	return a
 }

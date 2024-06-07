@@ -23,7 +23,7 @@ var (
 	countRetries = 100
 )
 
-func InitAWSConfiguration(profile string, awsEndpoint string) (awsc AWSConfig) {
+func InitAWSConfiguration(profile string, awsEndpoint string) (awsc *AWSConfig) {
 	// Load the Shared AWS Configuration (~/.aws/config)
 	cfg, _ := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile(profile),
 		config.WithRetryer(func() aws.Retryer {
@@ -34,7 +34,7 @@ func InitAWSConfiguration(profile string, awsEndpoint string) (awsc AWSConfig) {
 	if awsEndpoint != "" {
 		cfg.BaseEndpoint = aws.String(awsEndpoint)
 	}
-	awsc = AWSConfig{Profile: profile, Config: cfg}
+	awsc = &AWSConfig{Profile: profile, Config: cfg}
 	SetActions()
 	// Get the available AWS regions dynamically
 	ec2.ListAndSaveRegions(cfg)

@@ -23,6 +23,7 @@ type Conf struct {
 	Return      []string                 `yaml:"return"`
 	Enabled     bool                     `yaml:"enabled"`
 	Find        Find                     `yaml:"find,omitempty"`
+	logger      logging.LogManager
 }
 
 type Find struct {
@@ -33,15 +34,16 @@ type Find struct {
 }
 
 func GetConf(file string) (c *Conf) {
-	c = &Conf{}
+	logger := logging.GetLogManager()
+	c = &Conf{Enabled: true, logger: logger}
 	yamlFile, err := os.ReadFile(files.NormalizePath(file))
 	if err != nil {
-		logging.HandleError(err, "Yamler - GetConf", "Error on reading rule file")
+		logger.Error("Error on reading rule file", "err", err)
 	}
 	c.Enabled = true // Default value is: Enabled
 	err = yaml.Unmarshal(yamlFile, &c)
 	if err != nil {
-		logging.HandleError(err, "Yamler - GetConf", "Umarshalling yamlFile")
+		logger.Error("Error unmarshalling yamlFile", "err", err)
 	}
 
 	return c
@@ -49,107 +51,87 @@ func GetConf(file string) (c *Conf) {
 
 func PrepareQuery(config *Conf) (query string, arguments map[string]interface{}) {
 	arguments = make(map[string]interface{}, 0)
-	if config.Services != nil {
+	if len(config.Services) > 0 {
 		// Direct access to properties
 		query = prepareService(config.Services, arguments) +
 			prepareProperties(config.Properties, arguments) +
 			prepareResults(config.Return, arguments)
-	} else if config.Find.To != nil || config.Find.Who != nil || config.Find.With != nil {
-		if config.Find.Target != nil {
+	} else if len(config.Find.To) > 0 || len(config.Find.Who) > 0 || len(config.Find.With) > 0 {
+		if len(config.Find.Target) > 0 {
 			query = prepareQueryPrivEsc(config, arguments)
 		} else {
 			query = preparePathQuery(config, arguments)
 		}
 	} else {
-		logging.HandleError(nil, "Yamler - PrepareQuery", "Malformed rule!")
+		config.logger.Error("Malformed rule")
 	}
 	return query, arguments
 }
 
-func preparePathQuery(rule *Conf, arguments map[string]interface{}) (query string) {
+func preparePathQuery(rule *Conf, arguments map[string]interface{}) string {
 	template := "MATCH m%d = (who)-[:HAS_POLICY]->(:Policy)-[:ALLOWS]->(:Action {Service: $service%d, Action: $action%d}) \n"
-
-	matchQueries := ""
-	whereFilters := ""
-	returnValues := ""
+	var matchQueries, whereFilters, returnValues strings.Builder
 
 	for i, perm := range rule.Find.With {
 		withSplit := strings.Split(perm, ":")
-		service := withSplit[0]
-		action := withSplit[1]
-		arguments["action"+strconv.Itoa(i)] = action
-		arguments["service"+strconv.Itoa(i)] = service
+		service, action := withSplit[0], withSplit[1]
+		arguments[fmt.Sprintf("action%d", i)] = action
+		arguments[fmt.Sprintf("service%d", i)] = service
 
-		matchQueries += fmt.Sprintf(template, i, i, i)
-		returnValues += fmt.Sprintf("NODES(m%d) + ", i)
+		matchQueries.WriteString(fmt.Sprintf(template, i, i, i))
+		returnValues.WriteString(fmt.Sprintf("NODES(m%d) + ", i))
 	}
-	returnValues = strings.TrimRight(returnValues, "+ ")
-	query = matchQueries
+	query := matchQueries.String()
+	returnValuesStr := strings.TrimSuffix(returnValues.String(), " + ")
 
 	if len(rule.Find.Who) > 0 {
-		whereFilters = "WHERE ("
+		whereFilters.WriteString("WHERE (")
+		for i, who := range rule.Find.Who {
+			arguments[fmt.Sprintf("who%d", i)] = cases.Title(language.Und).String(who)
+			whereFilters.WriteString(fmt.Sprintf(`$who%d IN LABELS(who) OR `, i))
+		}
+		whereFiltersStr := strings.TrimSuffix(whereFilters.String(), " OR ")
+		query += whereFiltersStr + ") "
 	}
-	for i, who := range rule.Find.Who {
-		block := fmt.Sprintf(`$who%d IN LABELS(who)`, i)
-		arguments["who"+strconv.Itoa(i)] = cases.Title(language.Und).String(who)
-		whereFilters += fmt.Sprintf("%s OR ", block)
-	}
-	if len(rule.Find.Who) > 0 {
-		whereFilters = strings.TrimRight(whereFilters, "OR ")
-		whereFilters += ") "
-	}
-	query += whereFilters
-	query += fmt.Sprintf("\nWITH %s AS nds UNWIND nds as nd RETURN DISTINCT nd", returnValues)
-	return
+	query += fmt.Sprintf("\nWITH %s AS nds UNWIND nds as nd RETURN DISTINCT nd", returnValuesStr)
+	return query
 }
 
-func prepareQueryPrivEsc(rule *Conf, arguments map[string]interface{}) (query string) {
+func prepareQueryPrivEsc(rule *Conf, arguments map[string]interface{}) string {
 	template := "MATCH m%d = (who)-[:HAS_POLICY]->(:Policy)-[:ALLOWS]->(:Action {Service: $service%d, Action: $action%d}) \n"
-
-	matchQueries := ""
-	whereFilters := ""
-	returnValues := ""
-	shortestPath := ""
+	var matchQueries, whereFilters, returnValues, shortestPath strings.Builder
 
 	for i, perm := range rule.Find.With {
 		withSplit := strings.Split(perm, ":")
-		service := withSplit[0]
-		action := withSplit[1]
-		arguments["action"+strconv.Itoa(i)] = action
-		arguments["service"+strconv.Itoa(i)] = service
+		service, action := withSplit[0], withSplit[1]
+		arguments[fmt.Sprintf("action%d", i)] = action
+		arguments[fmt.Sprintf("service%d", i)] = service
 
-		matchQueries += fmt.Sprintf(template, i, i, i)
-		returnValues += fmt.Sprintf("NODES(m%d) + ", i)
+		matchQueries.WriteString(fmt.Sprintf(template, i, i, i))
+		returnValues.WriteString(fmt.Sprintf("NODES(m%d) + ", i))
 	}
-	returnValues = strings.TrimRight(returnValues, "+ ")
-	query = matchQueries
+	returnValuesStr := strings.TrimSuffix(returnValues.String(), " + ")
+	query := matchQueries.String()
 
 	if len(rule.Find.Who) > 0 {
-		whereFilters = "WHERE ("
-	}
-	for i, who := range rule.Find.Who {
-		block := fmt.Sprintf(`$who%d IN LABELS(who)`, i)
-		arguments["who"+strconv.Itoa(i)] = cases.Title(language.Und).String(who)
-		whereFilters += fmt.Sprintf("%s OR ", block)
-	}
-	if len(rule.Find.Who) > 0 {
-		whereFilters = strings.TrimRight(whereFilters, "OR ")
-		whereFilters += ") "
+		whereFilters.WriteString("WHERE (")
+		for i, who := range rule.Find.Who {
+			arguments[fmt.Sprintf("who%d", i)] = cases.Title(language.Und).String(who)
+			whereFilters.WriteString(fmt.Sprintf(`$who%d IN LABELS(who) OR `, i))
+		}
+		whereFiltersStr := strings.TrimSuffix(whereFilters.String(), " OR ")
+		query += whereFiltersStr + ") "
 	}
 
 	if len(rule.Find.Target) > 0 {
-		targetWhereFilter := "WHERE (%s) AND (%s)"
-		targetWhereLabelFilters := ""
-		targetWherePropertyFilters := ""
+		var targetWhereLabelFilters, targetWherePropertyFilters strings.Builder
 		for i, target := range rule.Find.Target {
 			for what, id := range target {
 				what = cases.Title(language.Und).String(what)
+				arguments[fmt.Sprintf("targetType%d", i)] = what
+				targetWhereLabelFilters.WriteString(fmt.Sprintf(`$targetType%d IN LABELS(target) OR `, i))
 
-				blockLabel := fmt.Sprintf(`$targetType%d IN LABELS(target)`, i)
-				arguments["targetType"+strconv.Itoa(i)] = what
-				targetWhereLabelFilters += fmt.Sprintf("%s OR ", blockLabel)
-
-				blockProperty := ""
+				var blockProperty string
 				switch what {
 				case "Policy":
 					blockProperty = fmt.Sprintf(`target.Name = $target%d`, i)
@@ -162,68 +144,61 @@ func prepareQueryPrivEsc(rule *Conf, arguments map[string]interface{}) (query st
 				case "User":
 					blockProperty = fmt.Sprintf(`target.UserName = $target%d`, i)
 				}
-				arguments["target"+strconv.Itoa(i)] = id
-				targetWherePropertyFilters += fmt.Sprintf("%s OR ", blockProperty)
+				arguments[fmt.Sprintf("target%d", i)] = id
+				targetWherePropertyFilters.WriteString(fmt.Sprintf("%s OR ", blockProperty))
 			}
 		}
-		targetWhereLabelFilters = strings.TrimRight(targetWhereLabelFilters, "OR ")
-		targetWherePropertyFilters = strings.TrimRight(targetWherePropertyFilters, "OR ")
-		targetWhereFilter = fmt.Sprintf(targetWhereFilter, targetWhereLabelFilters, targetWherePropertyFilters)
-		shortestPath = fmt.Sprintf("\nMATCH p0 = allShortestPaths((who)-[*1..10]->(target))\n%s", targetWhereFilter)
-		returnValues += fmt.Sprintf(" + NODES(p%d)", 0)
+		targetWhereLabelFiltersStr := strings.TrimSuffix(targetWhereLabelFilters.String(), " OR ")
+		targetWherePropertyFiltersStr := strings.TrimSuffix(targetWherePropertyFilters.String(), " OR ")
+		shortestPath.WriteString(fmt.Sprintf("\nMATCH p0 = allShortestPaths((who)-[*1..10]->(target))\nWHERE (%s) AND (%s)", targetWhereLabelFiltersStr, targetWherePropertyFiltersStr))
+		returnValues.WriteString(" + NODES(p0)")
 	}
-	query += whereFilters
-	query += shortestPath
-	query += fmt.Sprintf("\nWITH %s AS nds UNWIND nds as nd RETURN DISTINCT nd", returnValues)
-	return
+	query += shortestPath.String()
+	query += fmt.Sprintf("\nWITH %s AS nds UNWIND nds as nd RETURN DISTINCT nd", returnValuesStr)
+	fmt.Println(query)
+	return query
 }
 
 func prepareService(services []string, arguments map[string]interface{}) string {
-	var query string
-	query = "MATCH (s:Service)\nWHERE"
+	var query strings.Builder
+	query.WriteString("MATCH (s:Service)\nWHERE")
 	for i, service := range services {
 		service = cases.Title(language.Und).String(service)
+		query.WriteString(fmt.Sprintf(" $name%d IN LABELS(s)", i))
 		if i < len(services)-1 {
-			query = fmt.Sprintf("%s $name%d IN LABELS(s) OR", query, i)
-		} else {
-			query = fmt.Sprintf("%s $name%d IN LABELS(s)\n", query, i)
+			query.WriteString(" OR")
 		}
-		arguments["name"+strconv.Itoa(i)] = service
+		arguments[fmt.Sprintf("name%d", i)] = service
 	}
-	query += "WITH s\n"
-	return query
+	query.WriteString("\nWITH s\n")
+	return query.String()
 }
 
 func prepareProperties(props []map[string]interface{}, arguments map[string]interface{}) string {
-	var query = "MATCH (s)\n"
-	var separator = "_"
-	var count = 0
-
-	if len(props) > 0 {
-		query += "WHERE"
+	if len(props) == 0 {
+		return "MATCH (s)\n"
 	}
 
+	var query strings.Builder
+	separator := "_"
+	query.WriteString("MATCH (s)\nWHERE")
+	var count int
 	for _, prop := range props {
 		subprops := walk(reflect.ValueOf(prop), separator)
 		for _, p := range subprops {
-			// Split the input in Key/Value
-			key := strings.Split(p, "__")[0]
-			value := strings.Split(p, "__")[1]
-			arguments["key"+strconv.Itoa(count)] = key
-			// Boolean must be used on queries
+			key, value := strings.Split(p, "__")[0], strings.Split(p, "__")[1]
+			arguments[fmt.Sprintf("key%d", count)] = key
 			if b, err := strconv.ParseBool(value); err == nil {
-				arguments["value"+strconv.Itoa(count)] = b
+				arguments[fmt.Sprintf("value%d", count)] = b
 			} else {
-				arguments["value"+strconv.Itoa(count)] = value
+				arguments[fmt.Sprintf("value%d", count)] = value
 			}
-			query = fmt.Sprintf(`%s any(prop in keys(s) where toLower(prop) STARTS WITH toLower($key%d) AND s[prop] = $value%d) AND`,
-				query, count, count)
+			query.WriteString(fmt.Sprintf(` any(prop in keys(s) where toLower(prop) STARTS WITH toLower($key%d) AND s[prop] = $value%d) AND`, count, count))
 			count++
 		}
 	}
-
-	query = strings.TrimRight(query, " AND") + "\n"
-	return query
+	queryStr := strings.TrimSuffix(query.String(), " AND") + "\n"
+	return queryStr
 }
 
 //nolint:unused
@@ -246,7 +221,8 @@ func prepareResults(results []string, arguments map[string]interface{}) string {
 	return query
 }
 
-func walk(v reflect.Value, separator string) (output []string) {
+func walk(v reflect.Value, separator string) []string {
+	var output []string
 	// Indirect through pointers and interfaces
 	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
 		v = v.Elem()

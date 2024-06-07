@@ -63,7 +63,7 @@ func importZipFile(connector *connector.StorageConnector, zipfile string) {
 			continue
 		}
 		if err := processZipFile(connector, f); err != nil {
-			logging.HandleError(err, "Assess", "Processing ZIP file")
+			logger.Error("Processing ZIP file", "err", err)
 		}
 	}
 }

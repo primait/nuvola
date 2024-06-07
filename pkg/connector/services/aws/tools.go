@@ -11,37 +11,38 @@ import (
 )
 
 func SetActions() {
+	logger := logging.GetLogManager()
 	URL := "https://awspolicygen.s3.amazonaws.com/js/policies.js"
 	client := req.C().SetBaseURL(URL).SetTimeout(30 * time.Second).SetUserAgent("Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0")
 
-	response := client.Get().
+	response, err := client.R().
 		SetHeader("Connection", "keep-alive").
 		SetHeader("Pragma", "no-cache").
 		SetHeader("Cache-Control", "no-cache").
-		Do()
-	if response.Err != nil {
-		logging.HandleError(response.Err, "AWS - SetActions", "Error on calling HTTP endpoint")
+		Get(URL)
+	if err != nil {
+		logger.Error("Error on calling HTTP endpoint", "err", err)
 	}
 
 	resString := strings.Replace(response.String(), "app.PolicyEditorConfig=", "", 1)
 	obj, err := oj.ParseString(resString)
 	if err != nil {
-		logging.HandleError(err, "AWS - SetActions", "Error on parsing output string")
+		logger.Error("Error on parsing output string", "err", err)
 	}
 	query, err := gojq.Parse(`.serviceMap[] | .StringPrefix as $prefix | .Actions[] | "\($prefix):\(.)"`)
 	if err != nil {
-		logging.HandleError(err, "AWS - SetActions", "Error on mapping string to object")
+		logger.Error("Error on mapping string to object", "err", err)
 	}
 
 	iter := query.Run(obj)
-	ActionsMap = make(map[string][]string, 0)
+	ActionsMap = make(map[string][]string)
 	for {
 		v, ok := iter.Next()
 		if !ok {
 			break
 		}
 		if err, ok := v.(error); ok {
-			logging.HandleError(err, "AWS - SetActions", "Error on itering over objects")
+			logger.Error("Error on iterating over objects", "err", err)
 		}
 
 		ActionsList = append(ActionsList, v.(string))
@@ -54,9 +55,9 @@ func SetActions() {
 
 func unique(slice []string) []string {
 	keys := make(map[string]bool)
-	list := []string{}
+	var list []string
 	for _, entry := range slice {
-		if _, value := keys[entry]; !value {
+		if !keys[entry] {
 			keys[entry] = true
 			list = append(list, entry)
 		}
