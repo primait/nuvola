@@ -71,6 +71,10 @@ make build
 
 ![Screenshot_20220904_185619](https://user-images.githubusercontent.com/6991986/188325663-d713d2bc-d522-4e9c-bc02-fc766f010374.png)
 
+## Troubleshooting
+
+If you leverage on `.env_example`, `NEO4J_server_memory_*` neo4j memory settings may be too large, causing the docker container to crash due to a lack of memory on the host system. Removing the `NEO4J_server_memory_*` lines will force neo4j to calculate those values based on the available system resources ([ref](https://neo4j.com/docs/operations-manual/current/configuration/neo4j-conf/#neo4j-conf-JVM)).
+
 ## About nuvola
 
 To get started with nuvola and its database schema, check out the nuvola [Wiki](https://github.com/primait/nuvola/wiki).
