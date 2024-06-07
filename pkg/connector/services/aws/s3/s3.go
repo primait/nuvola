@@ -18,7 +18,9 @@ import (
 )
 
 func ListBuckets(cfg aws.Config) (buckets []*Bucket) {
-	s3Client := S3Client{Config: cfg, client: s3.NewFromConfig(cfg, func(o *s3.Options) { o.UsePathStyle = true })}
+	s3Client := S3Client{Config: cfg, client: s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.UsePathStyle = true
+	})}
 
 	output, err := s3Client.client.ListBuckets(context.TODO(), &s3.ListBucketsInput{})
 	if errors.As(err, &re) {

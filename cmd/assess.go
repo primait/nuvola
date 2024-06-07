@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/primait/nuvola/pkg/connector"
@@ -19,41 +18,33 @@ import (
 var assessCmd = &cobra.Command{
 	Use:   "assess",
 	Short: "Execute assessment queries against data loaded in Neo4J",
-	Run: func(cmd *cobra.Command, args []string) {
-		if cmd.Flags().Changed(flagVerbose) {
-			logger.SetVerboseLevel()
-		}
-		if cmd.Flags().Changed(flagDebug) {
-			logger.SetDebugLevel()
-		}
+	Run:   runAssessCmd,
+}
 
-		connector.SetActions()
-		storageConnector := connector.NewStorageConnector()
-		if importFile != "" {
-			logger.Info("Flushing database")
-			logger.Info(fmt.Sprintf("Importing %s", importFile))
-			importZipFile(storageConnector, importFile)
-		}
+func runAssessCmd(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed(flagVerbose) {
+		logger.SetVerboseLevel()
+	}
+	if cmd.Flags().Changed(flagDebug) {
+		logger.SetDebugLevel()
+	}
 
-		assess(storageConnector, "./assets/rules/")
-	},
+	storageConnector := connector.NewStorageConnector()
+	if importFile != "" {
+		logger.Debug(fmt.Sprintf("Importing %s", importFile))
+		importZipFile(storageConnector, importFile)
+		logger.Debug(fmt.Sprintf("Imported %s", importFile))
+	}
+
+	assess(storageConnector, "./assets/rules/")
 }
 
 func importZipFile(connector *connector.StorageConnector, zipfile string) {
 	connector.FlushAll()
-	var ordering = []string{
-		"Groups",
-		"Users",
-		"Roles",
-		"Buckets",
-		"EC2s",
-		"VPCs",
-		"Lambdas",
-		"RDS",
-		"DynamoDBs",
-		"RedshiftDBs",
+	ordering := []string{
+		"Groups", "Users", "Roles", "Buckets", "EC2s", "VPCs", "Lambdas", "RDS", "DynamoDBs", "RedshiftDBs",
 	}
-	var orderedFiles = make([]*zip.File, len(ordering))
+	orderedFiles := make([]*zip.File, len(ordering))
 
 	r := unzip.UnzipInMemory(zipfile)
 	defer r.Close()
@@ -62,61 +53,73 @@ func importZipFile(connector *connector.StorageConnector, zipfile string) {
 		for ord := range ordering {
 			if strings.HasPrefix(f.Name, ordering[ord]) {
 				orderedFiles[ord] = f
+				break
 			}
 		}
 	}
 
 	for _, f := range orderedFiles {
-		rc, err := f.Open()
-		if err != nil {
-			logging.HandleError(err, "Assess", "Opening content of ZIP")
+		if f == nil {
+			continue
 		}
-		defer func() {
-			if err := rc.Close(); err != nil {
-				log.Printf("error closing resource: %s", err)
-			}
-		}()
-
-		buf := new(bytes.Buffer)
-		_, err = io.Copy(buf, rc) // #nosecG110
-		if err != nil {
-			logging.HandleError(err, "Assess", "Copying buffer from ZIP")
+		if err := processZipFile(connector, f); err != nil {
+			logging.HandleError(err, "Assess", "Processing ZIP file")
 		}
-		connector.ImportResults(f.Name, buf.Bytes())
 	}
+}
+
+func processZipFile(connector *connector.StorageConnector, f *zip.File) error {
+	rc, err := f.Open()
+	if err != nil {
+		return fmt.Errorf("opening content of ZIP: %w", err)
+	}
+	defer rc.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, rc) // #nosecG110
+	if err != nil {
+		return fmt.Errorf("copying buffer from ZIP: %w", err)
+	}
+
+	connector.ImportResults(f.Name, buf.Bytes())
+	return nil
 }
 
 func assess(connector *connector.StorageConnector, rulesPath string) {
 	// perform checks based on pre-defined static rules
 	for _, rule := range files.GetFiles(rulesPath, ".ya?ml") {
-		var c = yamler.GetConf(rule)
-		if c.Enabled {
-			query, args := yamler.PrepareQuery(c)
-			results := connector.Query(query, args)
+		c := yamler.GetConf(rule)
+		if !c.Enabled {
+			continue
+		}
 
-			logging.PrintRed("Running rule: " + rule)
-			logging.PrintGreen("Name: " + c.Name)
-			logging.PrintGreen("Arguments:")
-			logging.PrintDarkGreen(yamler.ArgsToQueryNeo4jBrowser(args))
-			logging.PrintGreen("Query:")
-			logging.PrintDarkGreen(query)
-			logging.PrintGreen("Description: " + c.Description)
+		query, args := yamler.PrepareQuery(c)
+		results := connector.Query(query, args)
 
-			for _, resultMap := range results {
-				for key, value := range resultMap {
-					for _, retValue := range c.Return {
-						if string(retValue[len(retValue)-1]) == "*" {
-							// Return value contains a *: return all matching keys
-							retValue = retValue[0 : len(retValue)-1]
-							retValue = strings.TrimRight(retValue, "_")
-						}
-						if strings.HasPrefix(key, retValue) {
-							fmt.Printf("%s: %v\n", key, value)
-						}
-					}
-				}
+		logging.PrintRed("Running rule: " + rule)
+		logging.PrintGreen("Name: " + c.Name)
+		logging.PrintGreen("Arguments:")
+		logging.PrintDarkGreen(yamler.ArgsToQueryNeo4jBrowser(args))
+		logging.PrintGreen("Query:")
+		logging.PrintDarkGreen(query)
+		logging.PrintGreen("Description: " + c.Description)
+
+		for _, resultMap := range results {
+			for key, value := range resultMap {
+				printResults(c.Return, key, value)
 			}
-			fmt.Print("\n")
+		}
+		fmt.Print("\n")
+	}
+}
+
+func printResults(returnKeys []string, key string, value interface{}) {
+	for _, retValue := range returnKeys {
+		if strings.HasSuffix(retValue, "*") {
+			retValue = strings.TrimRight(retValue[:len(retValue)-1], "_")
+		}
+		if strings.HasPrefix(key, retValue) {
+			fmt.Printf("%s: %v\n", key, value)
 		}
 	}
 }
