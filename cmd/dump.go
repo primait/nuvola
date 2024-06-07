@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/primait/nuvola/pkg/connector"
@@ -62,14 +63,17 @@ func runDumpCmd(cmd *cobra.Command, args []string) {
 
 func dumpData(storageConnector *connector.StorageConnector, cloudConnector *connector.CloudConnector) {
 	dataChan := make(chan map[string]interface{})
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
-		cloudConnector.DumpAll("aws", dataChan)
+		cloudConnector.DumpAll("aws", dataChan, &wg)
 		defer close(dataChan)
 	}()
 
 	for data := range dataChan {
 		processData(data, storageConnector)
 	}
+	wg.Wait()
 }
 
 func processData(data map[string]interface{}, storageConnector *connector.StorageConnector) {

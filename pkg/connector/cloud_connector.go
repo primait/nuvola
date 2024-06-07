@@ -3,6 +3,7 @@ package connector
 import (
 	"errors"
 	"strings"
+	"sync"
 
 	awsconfig "github.com/primait/nuvola/pkg/connector/services/aws"
 	"github.com/primait/nuvola/pkg/io/logging"
@@ -23,16 +24,17 @@ func SetActions() {
 	awsconfig.SetActions()
 }
 
-func (cc *CloudConnector) DumpAll(cloudprovider string, c chan map[string]interface{}) {
+func (cc *CloudConnector) DumpAll(cloudprovider string, c chan map[string]interface{}, wg *sync.WaitGroup) {
 	switch strings.ToLower(cloudprovider) {
 	case "aws":
-		cc.dumpAWSData(c)
+		cc.dumpAWSData(c, wg)
 	default:
 		cc.logger.Error("Unsupported cloud provider", "cloudprovider", cloudprovider)
 	}
 }
 
-func (cc *CloudConnector) dumpAWSData(c chan map[string]interface{}) {
+func (cc *CloudConnector) dumpAWSData(c chan map[string]interface{}, wg *sync.WaitGroup) {
+	defer wg.Done()
 	data := map[string]interface{}{
 		"Whoami":           cc.AWSConfig.DumpWhoami(),
 		"CredentialReport": cc.AWSConfig.DumpCredentialReport(),
