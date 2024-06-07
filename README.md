@@ -38,7 +38,7 @@ You may need to edit the size of the memory allocated to Neo4j in you run the to
 3. Start the Neo4j docker instance
 
 ```bash
-make start
+make start-containers
 ```
 
 4. Build the tool
@@ -52,13 +52,13 @@ make build
 1. Firstly you need to dump all the supported AWS services configurations and load the data into the Neo4j database:
 
 ```bash
-./nuvola dump -profile default_RO -outputdir ~/DumpDumpFolder -format zip
+./nuvola dump --aws-profile default_RO --output-dir ~/DumpDumpFolder --output-format zip
 ```
 
 2. To import a previously executed dump operation into the Neo4j database:
 
 ```bash
-./nuvola assess -import ~/DumpDumpFolder/nuvola-default_RO_20220901.zip
+./nuvola assess --import ~/DumpDumpFolder/nuvola-default_RO_20220901.zip
 ```
 
 3. To only perform static assessments on the data loaded into the Neo4j database using the [predefined ruleset](https://github.com/primait/nuvola/tree/master/assets/rules):
@@ -89,8 +89,13 @@ No data is sent or shared with Prima Assicurazioni.
 ## Presentations
 
 - RomHack 2022
+
   - [Slides](https://github.com/primait/nuvola/tree/master/assets/slides/RomHack_2022-You_shall_not_PassRole.pdf)
   - [Demos](https://github.com/primait/nuvola/tree/master/assets/demos/)
+
+- DevSecCon 2024
+  - [Agenda](https://www.devseccon.com/events/aws-privilege-escalation-and-lateral-movements)
+  - [Video](https://www.youtube.com/watch?v=7QXy8lEMqlI)
 
 ## License
 
