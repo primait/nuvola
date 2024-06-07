@@ -26,56 +26,30 @@ func SetActions() {
 func (cc *CloudConnector) DumpAll(cloudprovider string, c chan map[string]interface{}) {
 	switch strings.ToLower(cloudprovider) {
 	case "aws":
-		whoami := cc.AWSConfig.DumpWhoami()
-		c <- map[string]interface{}{
-			"Whoami": whoami,
-		}
-		credentialReport := cc.AWSConfig.DumpCredentialReport()
-		c <- map[string]interface{}{
-			"CredentialReport": credentialReport,
-		}
-		groups := cc.AWSConfig.DumpIAMGroups()
-		c <- map[string]interface{}{
-			"Groups": groups,
-		}
-		users := cc.AWSConfig.DumpIAMUsers()
-		c <- map[string]interface{}{
-			"Users": users,
-		}
-		roles := cc.AWSConfig.DumpIAMRoles()
-		c <- map[string]interface{}{
-			"Roles": roles,
-		}
-		buckets := cc.AWSConfig.DumpBuckets()
-		c <- map[string]interface{}{
-			"Buckets": buckets,
-		}
-		ec2 := cc.AWSConfig.DumpEC2Instances()
-		c <- map[string]interface{}{
-			"EC2s": ec2,
-		}
-		vpc := cc.AWSConfig.DumpVpcs()
-		c <- map[string]interface{}{
-			"VPCs": vpc,
-		}
-		lambda := cc.AWSConfig.DumpLambdas()
-		c <- map[string]interface{}{
-			"Lambdas": lambda,
-		}
-		rds := cc.AWSConfig.DumpRDS()
-		c <- map[string]interface{}{
-			"RDS": rds,
-		}
-		dynamodb := cc.AWSConfig.DumpDynamoDBs()
-		c <- map[string]interface{}{
-			"DynamoDBs": dynamodb,
-		}
-		redshift := cc.AWSConfig.DumpRedshiftDBs()
-		c <- map[string]interface{}{
-			"RedshiftDBs": redshift,
-		}
-		close(c)
+		cc.dumpAWSData(c)
 	default:
+		cc.logger.Error("Unsupported cloud provider", "cloudprovider", cloudprovider)
+	}
+}
+
+func (cc *CloudConnector) dumpAWSData(c chan map[string]interface{}) {
+	data := map[string]interface{}{
+		"Whoami":           cc.AWSConfig.DumpWhoami(),
+		"CredentialReport": cc.AWSConfig.DumpCredentialReport(),
+		"Groups":           cc.AWSConfig.DumpIAMGroups(),
+		"Users":            cc.AWSConfig.DumpIAMUsers(),
+		"Roles":            cc.AWSConfig.DumpIAMRoles(),
+		"Buckets":          cc.AWSConfig.DumpBuckets(),
+		"EC2s":             cc.AWSConfig.DumpEC2Instances(),
+		"VPCs":             cc.AWSConfig.DumpVpcs(),
+		"Lambdas":          cc.AWSConfig.DumpLambdas(),
+		"RDS":              cc.AWSConfig.DumpRDS(),
+		"DynamoDBs":        cc.AWSConfig.DumpDynamoDBs(),
+		"RedshiftDBs":      cc.AWSConfig.DumpRedshiftDBs(),
+	}
+
+	for key, value := range data {
+		c <- map[string]interface{}{key: value}
 	}
 }
 
@@ -84,6 +58,7 @@ func (cc *CloudConnector) testConnection(cloudprovider string) bool {
 	case "aws":
 		return cc.AWSConfig.TestConnection()
 	default:
+		cc.logger.Error("Unsupported cloud provider", "cloudprovider", cloudprovider)
 		return false
 	}
 }

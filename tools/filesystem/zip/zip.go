@@ -11,40 +11,48 @@ import (
 	"github.com/primait/nuvola/pkg/io/logging"
 )
 
-func Zip(path string, profile string, values *map[string]interface{}) {
+func Zip(path string, profile string, values map[string]interface{}) {
+	logger := logging.GetLogManager()
 	today := time.Now().Format("20060102")
-	fileSeparator := string(filepath.Separator)
-	profile = filepath.Clean(strings.Replace(profile, fileSeparator, "-", -1))
-	filePtr, err := os.Create(fmt.Sprintf("%s%snuvola-%s_%s.zip", filepath.Clean(path), fileSeparator, profile, today))
+	profile = filepath.Clean(strings.Replace(profile, string(filepath.Separator), "-", -1))
+	filePtr, err := os.Create(
+		filepath.Join(
+			filepath.Clean(path),
+			fmt.Sprintf("nuvola-%s_%s.zip", profile, today)),
+	)
 	if err != nil {
-		logging.HandleError(err, "Zip", "Error on creating output folder")
+		logger.Error("Error on creating output folder", "err", err)
 	}
 	defer func() {
-		if err := filePtr.Close(); err != nil {
-			logging.HandleError(err, "Zip", "Error closing file")
+		if cerr := filePtr.Close(); cerr != nil {
+			logger.Error("Error closing file", "err", err)
 		}
 	}()
 
-	MyZipWriter := zip.NewWriter(filePtr)
-	defer MyZipWriter.Close()
+	zipWriter := zip.NewWriter(filePtr)
+	defer func() {
+		if cerr := zipWriter.Close(); cerr != nil {
+			logger.Error("Error closing zip writer", "err", cerr)
+		}
+	}()
 
-	for key, value := range *values {
-		writer, err := MyZipWriter.Create(fmt.Sprintf("%s_%s.json", key, today))
+	for key, value := range values {
+		writer, err := zipWriter.Create(fmt.Sprintf("%s_%s.json", key, today))
 		if err != nil {
-			fmt.Println(err)
+			logger.Error("Error on creating file", "err", err)
 		}
 
-		_, err = writer.Write(logging.PrettyJSON(value))
-		if err != nil {
-			logging.HandleError(err, "Zip", "Error on writing file content")
+		data := logger.PrettyJSON(value)
+		if _, err := writer.Write(data); err != nil {
+			logger.Error("Error writing file content", "err", err)
 		}
 	}
 }
 
-func UnzipInMemory(zipfile string) (r *zip.ReadCloser) {
+func UnzipInMemory(zipfile string) *zip.ReadCloser {
 	r, err := zip.OpenReader(zipfile)
 	if err != nil {
-		logging.HandleError(err, "Zip", "Error on opening ZIP file")
+		logging.GetLogManager().Error("Error on opening ZIP file", "err", err)
 	}
-	return
+	return r
 }

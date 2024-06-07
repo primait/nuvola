@@ -12,6 +12,6 @@ type StorageConnector struct {
 }
 
 type CloudConnector struct {
-	AWSConfig awsconfig.AWSConfig
+	AWSConfig *awsconfig.AWSConfig
 	logger    logging.LogManager
 }

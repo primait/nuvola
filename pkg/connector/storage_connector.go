@@ -17,10 +17,9 @@ import (
 
 func NewStorageConnector() *StorageConnector {
 	neo4jURL := os.Getenv("NEO4J_URL")
-	neo4jUsername := "neo4j"
 	neo4jPassword := os.Getenv("PASSWORD")
 	logger := logging.GetLogManager()
-	client, err := neo4j.Connect(neo4jURL, neo4jUsername, neo4jPassword)
+	client, err := neo4j.Connect(neo4jURL, "neo4j", neo4jPassword)
 	if err != nil {
 		logger.Error("Error connecting to database", "err", err)
 	}
