@@ -2,7 +2,6 @@ package awsconnector
 
 import (
 	"context"
-	"os"
 
 	"github.com/primait/nuvola/pkg/connector/services/aws/database"
 	"github.com/primait/nuvola/pkg/connector/services/aws/ec2"
@@ -25,30 +24,19 @@ var (
 )
 
 func InitAWSConfiguration(profile string, awsEndpoint string) (awsc AWSConfig) {
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if awsEndpoint != "" {
-			return aws.Endpoint{
-				PartitionID:   "aws",
-				URL:           awsEndpoint,
-				SigningRegion: os.Getenv("AWS_DEFAULT_REGION"),
-			}, nil
-		}
-
-		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
-
 	// Load the Shared AWS Configuration (~/.aws/config)
 	cfg, _ := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile(profile),
 		config.WithRetryer(func() aws.Retryer {
 			return retry.AddWithMaxAttempts(retry.NewStandard(), countRetries)
 		}),
-		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	cfg.RetryMode = aws.RetryModeStandard
+	if awsEndpoint != "" {
+		cfg.BaseEndpoint = aws.String(awsEndpoint)
+	}
 	awsc = AWSConfig{Profile: profile, Config: cfg}
 	SetActions()
-	// Get the AWS regions dynamically
+	// Get the AWS regions availabe dynamically
 	ec2.ListAndSaveRegions(cfg)
 	iam.ActionsList = unique(ActionsList)
 	iam.ActionsMap = ActionsMap

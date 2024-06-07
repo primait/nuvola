@@ -5,11 +5,13 @@ import (
 	"strings"
 
 	awsconfig "github.com/primait/nuvola/pkg/connector/services/aws"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 func NewCloudConnector(profile string, endpointUrl string) (*CloudConnector, error) {
 	cc := &CloudConnector{
 		AWSConfig: awsconfig.InitAWSConfiguration(profile, endpointUrl),
+		logger:    logging.GetLogManager(),
 	}
 	if !cc.testConnection("aws") {
 		return nil, errors.New("invalid credentials or expired session")

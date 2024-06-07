@@ -6,31 +6,33 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/primait/nuvola/pkg/io/logging"
-
 	"github.com/primait/nuvola/pkg/connector/services/aws/database"
 	"github.com/primait/nuvola/pkg/connector/services/aws/ec2"
 	"github.com/primait/nuvola/pkg/connector/services/aws/iam"
 	"github.com/primait/nuvola/pkg/connector/services/aws/lambda"
 	"github.com/primait/nuvola/pkg/connector/services/aws/s3"
-	neo4jconnector "github.com/primait/nuvola/pkg/connector/services/neo4j"
+	neo4j "github.com/primait/nuvola/pkg/connector/services/neo4j"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 func NewStorageConnector() *StorageConnector {
 	neo4jURL := os.Getenv("NEO4J_URL")
 	neo4jUsername := "neo4j"
 	neo4jPassword := os.Getenv("PASSWORD")
-	client, err := neo4jconnector.Connect(neo4jURL, neo4jUsername, neo4jPassword)
+	logger := logging.GetLogManager()
+	client, err := neo4j.Connect(neo4jURL, neo4jUsername, neo4jPassword)
 	if err != nil {
-		logging.HandleError(err, "NewStorageConnector", "Error connecting to database")
+		logger.Error("Error connecting to database", "err", err)
 	}
 	connector := &StorageConnector{
 		Client: *client,
+		logger: logger,
 	}
 	return connector
 }
 
 func (sc *StorageConnector) FlushAll() *StorageConnector {
+	sc.logger.Info("Flushing the database")
 	sc.Client.DeleteAll()
 	return sc
 }
@@ -49,7 +51,7 @@ func (sc *StorageConnector) ImportResults(what string, content []byte) {
 	var dynamodbs = regexp.MustCompile(`^DynamoDBs`)
 	var redshiftdbs = regexp.MustCompile(`^RedshiftDBs`)
 
-	logging.GetLogManager().Info(fmt.Sprintf("Importing: %s", what))
+	sc.logger.Debug(fmt.Sprintf("Importing: %s", what))
 	switch {
 	case whoami.MatchString(what):
 	case credentialReport.MatchString(what):
@@ -95,16 +97,16 @@ func (sc *StorageConnector) ImportResults(what string, content []byte) {
 		_ = json.Unmarshal(content, &contentStruct)
 		sc.Client.AddRedshift(&contentStruct)
 	default:
-		logging.HandleError(nil, "ImportResults", "Error importing data")
+		sc.logger.Error("Error importing data", "data", what)
 	}
-	logging.GetLogManager().Info(fmt.Sprintf("Imported: %s", what))
+	sc.logger.Info(fmt.Sprintf("Imported: %s", what))
 }
 
 func (sc *StorageConnector) ImportBulkResults(content map[string]interface{}) {
 	for k, v := range content {
 		value, err := json.Marshal(v)
 		if err != nil {
-			logging.HandleError(err, "ImportBulkResults", "Error on marshalling data")
+			sc.logger.Error("Error on marshalling data", "err", err)
 		}
 		sc.ImportResults(k, value)
 	}
