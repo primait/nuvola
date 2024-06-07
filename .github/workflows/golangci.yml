@@ -53,8 +53,6 @@ jobs:
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         # v4.1.6
       - name: Run Gosec Security Scanner
-        # master to fetch latest checks
-        # kics-scan ignore-line
         uses: securego/gosec@6fbd381238e97e1d1f3358f0d6d65de78dcf9245
         # V.2.20.0
         with:
