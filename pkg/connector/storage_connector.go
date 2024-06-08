@@ -3,7 +3,6 @@ package connector
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"regexp"
 
 	"github.com/primait/nuvola/pkg/connector/services/aws/database"
@@ -13,11 +12,12 @@ import (
 	"github.com/primait/nuvola/pkg/connector/services/aws/s3"
 	neo4j "github.com/primait/nuvola/pkg/connector/services/neo4j"
 	"github.com/primait/nuvola/pkg/io/logging"
+	"github.com/spf13/viper"
 )
 
 func NewStorageConnector() *StorageConnector {
-	neo4jURL := os.Getenv("NEO4J_URL")
-	neo4jPassword := os.Getenv("PASSWORD")
+	neo4jURL := viper.GetString("NEO4J_URL")
+	neo4jPassword := viper.GetString("NEO4J_PASS")
 	logger := logging.GetLogManager()
 	client, err := neo4j.Connect(neo4jURL, "neo4j", neo4jPassword)
 	if err != nil {
