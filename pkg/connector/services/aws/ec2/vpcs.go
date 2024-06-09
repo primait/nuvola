@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 func ListVpcs(cfg aws.Config) (vpcs *VPC) {
@@ -30,23 +29,24 @@ func (ec *EC2Client) getVpcs() (vpcs *VPC) {
 		MaxResults: aws.Int32(1000),
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "EC2 - VPC", "DescribeVpcs")
+		ec.logger.Warn("Error on DescribeVpcs", "err", re)
 	}
 
 	peeringOutput, err := ec.client.DescribeVpcPeeringConnections(context.TODO(), &ec2.DescribeVpcPeeringConnectionsInput{
 		MaxResults: aws.Int32(1000),
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "EC2 - VPC", "DescribeVpcPeeringConnections")
+		ec.logger.Warn("Error on DescribeVpcPeeringConnections", "err", re)
 	}
 
-	for i := 0; i < len(vpcsOutput.Vpcs); i++ {
-		vpcs.VPCs = append(vpcs.VPCs, vpcsOutput.Vpcs[i])
-	}
+	if vpcsOutput != nil {
+		for i := 0; i < len(vpcsOutput.Vpcs); i++ {
+			vpcs.VPCs = append(vpcs.VPCs, vpcsOutput.Vpcs[i])
+		}
 
-	for i := 0; i < len(peeringOutput.VpcPeeringConnections); i++ {
-		vpcs.Peerings = append(vpcs.Peerings, peeringOutput.VpcPeeringConnections[i])
+		for i := 0; i < len(peeringOutput.VpcPeeringConnections); i++ {
+			vpcs.Peerings = append(vpcs.Peerings, peeringOutput.VpcPeeringConnections[i])
+		}
 	}
-
 	return
 }

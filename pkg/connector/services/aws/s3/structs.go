@@ -5,11 +5,13 @@ import (
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 type S3Client struct {
 	client *s3.Client
 	Config aws.Config
+	logger logging.LogManager
 }
 
 // Override SDK S3 Bucket type

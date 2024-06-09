@@ -14,6 +14,7 @@ import (
 type EC2Client struct {
 	client *ec2.Client
 	aws.Config
+	logger logging.LogManager
 }
 
 // Override SDK EC2 instance type to insert SecurityGroup information
@@ -44,11 +45,8 @@ func ListAndSaveRegions(cfg aws.Config) {
 		ec2Client := ec2.NewFromConfig(cfg)
 
 		output, err := ec2Client.DescribeRegions(context.TODO(), &ec2.DescribeRegionsInput{})
-		if errors.As(err, &re) {
-			logging.HandleError(err, "EC2", "ListAndSaveRegions")
-		}
-		if output == nil {
-			logging.HandleError(errors.New("invalid profile or credentials"), "EC2", "ListAndSaveRegions")
+		if errors.As(err, &re) || output == nil {
+			logging.GetLogManager().Warn("Error on listing regions", "err", err)
 		} else {
 			for _, region := range output.Regions {
 				Regions = append(Regions, aws.ToString(region.RegionName))

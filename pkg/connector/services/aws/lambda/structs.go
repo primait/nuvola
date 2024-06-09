@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 type Lambda struct {
@@ -16,6 +17,7 @@ type Lambda struct {
 type LambdaClient struct {
 	client *lambda.Client
 	Config aws.Config
+	logger logging.LogManager
 }
 
 type statement struct {

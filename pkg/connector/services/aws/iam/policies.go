@@ -12,7 +12,6 @@ import (
 	aat "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 var VALIDATE = false
@@ -28,7 +27,7 @@ func (ic *IAMClient) ValidatePolicy(policy string) (findings []aat.ValidatePolic
 		PolicyType:     aat.PolicyTypeIdentityPolicy,
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "IAM - Policies", "ValidatePolicy")
+		ic.logger.Warn("Error on ValidatePolicy", "err", re)
 	}
 
 	if output != nil && len(output.Findings) > 0 {
@@ -54,7 +53,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 			RoleName: &identity,
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Policies", "ListRolePolicies")
+			ic.logger.Warn("Error on ListRolePolicies", "err", re)
 		}
 		policies = attachedPolicies.PolicyNames
 	case object == "user":
@@ -63,7 +62,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 			UserName: &identity,
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Policies", "ListUserPolicies")
+			ic.logger.Warn("Error on ListUserPolicies", "err", re)
 		}
 		policies = attachedPolicies.PolicyNames
 	case object == "group":
@@ -72,11 +71,11 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 			GroupName: &identity,
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Policies", "ListGroupPolicies")
+			ic.logger.Warn("Error on ListGroupPolicies", "err", re)
 		}
 		policies = attachedPolicies.PolicyNames
 	default:
-		logging.HandleError(nil, "IAM - Policies", "FAILED: no user/role/group defined")
+		ic.logger.Warn("no user/role/group defined", "object", object)
 	}
 
 	for i := range policies {
@@ -88,7 +87,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 				RoleName:   &identity,
 			})
 			if errors.As(err, &re) {
-				logging.HandleAWSError(re, "IAM - Policies", "GetRolePolicy")
+				ic.logger.Warn("Error on GetRolePolicy", "err", re)
 			}
 			decodedValue, _ = url.QueryUnescape(*inlinePolicy.PolicyDocument)
 		case object == "user":
@@ -98,7 +97,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 				UserName:   &identity,
 			})
 			if errors.As(err, &re) {
-				logging.HandleAWSError(re, "IAM - Policies", "GetUserPolicy")
+				ic.logger.Warn("Error on GetUserPolicy", "err", re)
 			}
 			decodedValue, _ = url.QueryUnescape(*inlinePolicy.PolicyDocument)
 		case object == "group":
@@ -108,20 +107,20 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 				GroupName:  &identity,
 			})
 			if errors.As(err, &re) {
-				logging.HandleAWSError(re, "IAM - Policies", "GetGroupPolicy")
+				ic.logger.Warn("Error on GetGroupPolicy", "err", re)
 			}
 			decodedValue, _ = url.QueryUnescape(*inlinePolicy.PolicyDocument)
 		default:
-			logging.HandleError(nil, "IAM - Policies", "FAILED: no user/role/group defined")
+			ic.logger.Warn("no user/role/group defined", "object", object)
 		}
 
 		err := json.Unmarshal([]byte(decodedValue), &policyVersionDocument)
 		if err != nil {
-			logging.HandleError(nil, "IAM - Policies", "Error on Unmarshalling policyVersionDocument")
+			ic.logger.Warn("Error on Unmarshalling policyVersionDocument", "err", err)
 		}
 		policyVersionDocument.PolicyName = policies[i]
 		policyVersionDocument.Validation = ic.ValidatePolicy(decodedValue)
-		expandActions(&policyVersionDocument, identity)
+		ic.expandActions(&policyVersionDocument, identity)
 		inline = append(inline, policyVersionDocument)
 	}
 
@@ -140,7 +139,7 @@ func (ic *IAMClient) listPolicyVersions(policyArn *string) (policyVersions []Pol
 		MaxItems:  &maxItems,
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "IAM - Policies", "ListPolicyVersions")
+		ic.logger.Warn("Error on ListPolicyVersions", "err", re)
 	}
 
 	for _, policyVersion := range versions.Versions {
@@ -149,12 +148,12 @@ func (ic *IAMClient) listPolicyVersions(policyArn *string) (policyVersions []Pol
 			VersionId: policyVersion.VersionId,
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Policies", "GetPolicyVersion")
+			ic.logger.Warn("Error on GetPolicyVersion", "err", re)
 		}
 		decodedValue, _ := url.QueryUnescape(*pv.PolicyVersion.Document)
 		err = json.Unmarshal([]byte(decodedValue), &policyVersionDocument)
 		if err != nil {
-			logging.HandleError(err, "IAM - Policies", "Umarshalling policyVersionDocument")
+			ic.logger.Warn("Error on Unmarshalling policyVersionDocument", "err", err)
 		}
 		policyVersions = append(policyVersions, PolicyVersion{
 			PolicyVersion: policyVersion,
@@ -178,7 +177,7 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 			RoleName: &identity,
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Policies", "ListAttachedRolePolicies")
+			ic.logger.Warn("Error on ListAttachedRolePolicies", "err", re)
 		}
 		output = attachedPolicies.AttachedPolicies
 	case object == "user":
@@ -187,7 +186,7 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 			UserName: &identity,
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Policies", "ListAttachedUserPolicies")
+			ic.logger.Warn("Error on ListAttachedUserPolicies", "err", re)
 		}
 		output = attachedPolicies.AttachedPolicies
 	case object == "group":
@@ -196,21 +195,22 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 			GroupName: &identity,
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Policies", "ListAttachedGroupPolicies")
+			ic.logger.Warn("Error on ListAttachedGroupPolicies", "err", re)
 		}
 		output = attachedPolicies.AttachedPolicies
 	default:
-		logging.HandleError(nil, "IAM - Policies", "FAILED: no user/role/group defined")
+		ic.logger.Warn("no user/role/group defined", "object", object)
 	}
 
+	fmt.Println("Asdfasd")
 	for _, policy := range output {
 		policyVersions := ic.listPolicyVersions(policy.PolicyArn)
 		policyDocument, errj := json.Marshal(policyVersions[0].Document)
 		if errj != nil {
-			logging.HandleError(errj, "IAM - Policies", "Umarshalling policyVersions[0].Document")
+			ic.logger.Warn("Error on Unmarshalling policyVersionDocument", "err", errj)
 		}
 
-		expandActions(&policyVersions[0].Document, identity)
+		ic.expandActions(&policyVersions[0].Document, identity)
 		findings := ic.ValidatePolicy(string(policyDocument))
 		attached = append(attached, AttachedPolicies{
 			AttachedPolicy: policy,
@@ -222,7 +222,7 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 	return
 }
 
-func expandActions(policy *PolicyDocument, identity any) {
+func (ic *IAMClient) expandActions(policy *PolicyDocument, identity any) {
 	for i, statement := range policy.Statement {
 		var realActions []string
 
@@ -238,14 +238,7 @@ func expandActions(policy *PolicyDocument, identity any) {
 				realActions = append(realActions, getActionsStartingWith(v)...)
 			default:
 				policyJSON, _ := json.Marshal(policy)
-				logging.HandleError(
-					nil,
-					"IAM - Policies",
-					fmt.Sprintf("expandActions\nError: wrong syntax on policy statement %v\nPlease check your policies for \"%v\" principal or open an issue\ntype: %v",
-						string(policyJSON),
-						identity,
-						v),
-					false)
+				ic.logger.Warn("Error: wrong syntax on policy statement", "statement", string(policyJSON), "identity", identity, "type", v)
 			}
 		}
 
@@ -262,14 +255,7 @@ func expandActions(policy *PolicyDocument, identity any) {
 				realActions = removeFromList(realActions, getActionsStartingWith(v))
 			default:
 				policyJSON, _ := json.Marshal(policy)
-				logging.HandleError(
-					nil,
-					"IAM - Policies",
-					fmt.Sprintf("expandActions\nError: wrong syntax on policy statement %v\nPlease check your policies for \"%v\" principal or open an issue\ntype: %v",
-						string(policyJSON),
-						identity,
-						v),
-					false)
+				ic.logger.Warn("Error: wrong syntax on policy statement", "statement", string(policyJSON), "identity", identity, "type", v)
 			}
 		}
 

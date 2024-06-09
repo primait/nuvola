@@ -67,6 +67,7 @@ func ListUsers(cfg aws.Config, credentialReport map[string]*CredentialReport) (u
 func listUsers() (collectedUsers []types.User) {
 	var (
 		marker *string
+		logger = logging.GetLogManager()
 	)
 
 	for {
@@ -74,7 +75,7 @@ func listUsers() (collectedUsers []types.User) {
 			Marker: marker,
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Users", "ListUsers")
+			logger.Warn("Error on ListUsers", "err", re)
 		}
 
 		collectedUsers = append(collectedUsers, output.Users...)
@@ -91,6 +92,7 @@ func GetCredentialReport(cfg aws.Config) (credentialReport map[string]*Credentia
 	var (
 		countRetries = 0
 		maxRetries   = 5
+		logger       = logging.GetLogManager()
 	)
 
 	iamClient := iam.NewFromConfig(cfg)
@@ -100,30 +102,30 @@ func GetCredentialReport(cfg aws.Config) (credentialReport map[string]*Credentia
 		if re.HTTPStatusCode() == 410 { // Gone: https://http.cat/410
 			checkGen, err := iamClient.GenerateCredentialReport(context.TODO(), &iam.GenerateCredentialReportInput{})
 			if errors.As(err, &re) {
-				logging.HandleAWSError(re, "IAM - Users", "GenerateCredentialReport")
+				logger.Warn("Error on GenerateCredentialReport", "err", re)
 			}
 			log.Println("Credential Report generation requested...")
 			for checkGen.State != "COMPLETE" {
 				if countRetries >= maxRetries {
-					logging.HandleAWSError(re, "IAM - Policies", "GenerateCredentialReport")
+					logger.Warn("Error on GenerateCredentialReport", "err", re)
 				}
 				countRetries++
 				time.Sleep(5 * time.Second)
 				checkGen, err = iamClient.GenerateCredentialReport(context.TODO(), &iam.GenerateCredentialReportInput{})
 				if errors.As(err, &re) {
-					logging.HandleAWSError(re, "IAM - Users", "GenerateCredentialReport")
+					logger.Warn("Error on GenerateCredentialReport", "err", re)
 				}
 			}
 			return GetCredentialReport(cfg)
 		} else {
-			logging.HandleAWSError(re, "IAM - Users", "GetCredentialReport")
+			logger.Warn("Error on GetCredentialReport", "err", re)
 		}
 		return nil
 	}
 
 	credentialReportCSV := []*CredentialReport{}
 	if err := gocsv.Unmarshal(bytes.NewReader(output.Content), &credentialReportCSV); err != nil {
-		logging.HandleError(err, "IAM - Users", "Umarshalling credentialReportCSV")
+		logging.GetLogManager().Warn("Error unmarshalling credentialReportCSV", "err", err)
 	}
 
 	credentialReport = make(map[string]*CredentialReport)
@@ -138,7 +140,7 @@ func (ic *IAMClient) listAccessKeys(identity string) (accessKeys []types.AccessK
 		UserName: &identity,
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "IAM - Users", "ListAccessKeys")
+		ic.logger.Warn("Error on ListAccessKeys", "err", re)
 	}
 	accessKeys = output.AccessKeyMetadata
 	return
@@ -150,7 +152,7 @@ func (ic *IAMClient) listLoginProfile(identity string) (loginProfile types.Login
 	})
 	if errors.As(err, &re) {
 		if re.HTTPStatusCode() != 404 { // an user may not have a login profile
-			logging.HandleAWSError(re, "IAM - Users", "GetLoginProfile")
+			ic.logger.Warn("Error on GetLoginProfile", "err", re)
 		}
 		return
 	}

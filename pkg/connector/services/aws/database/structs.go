@@ -8,6 +8,7 @@ import (
 	rdsTypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	redshiftTypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 type DynamoDB struct {
@@ -22,6 +23,7 @@ type Table struct {
 type DynamoClient struct {
 	client *dynamodb.Client
 	Config aws.Config
+	logger logging.LogManager
 }
 
 type RDS struct {
@@ -32,6 +34,7 @@ type RDS struct {
 type RDSClient struct {
 	client *rds.Client
 	Config aws.Config
+	logger logging.LogManager
 }
 
 type RedshiftDB struct {
@@ -41,6 +44,7 @@ type RedshiftDB struct {
 type RedshiftClient struct {
 	client *redshift.Client
 	Config aws.Config
+	logger logging.LogManager
 }
 
 var re *awshttp.ResponseError

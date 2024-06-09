@@ -11,7 +11,6 @@ import (
 	servicesIAM "github.com/primait/nuvola/pkg/connector/services/aws/iam"
 	servicesLambda "github.com/primait/nuvola/pkg/connector/services/aws/lambda"
 	servicesS3 "github.com/primait/nuvola/pkg/connector/services/aws/s3"
-	"github.com/primait/nuvola/pkg/io/logging"
 	"github.com/sourcegraph/conc/iter"
 
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -91,7 +90,7 @@ func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]s
 				items = append(items, item)
 				parseResources(statement.Resource, service, action, strconv.Itoa(int(idPolicy)), principal)
 			default:
-				logging.HandleError(nil, "Neo4j", fmt.Sprintf("createPolicyRelationships - case not implemented for %v of type: %v", statement.Action, v))
+				nc.logger.Warn("createPolicyRelationships - case not implemented", "action", statement.Action, "type", v)
 			}
 
 			// Append all actions of this statement to the UNWIND map
@@ -115,7 +114,7 @@ func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]s
 		})
 
 		if err != nil {
-			logging.HandleError(err, "Neo4j - createPolicyRelationships", "Error on executing query")
+			nc.logger.Warn("Error on executing query createPolicyRelationships", "err", err, "arguments", actions)
 		}
 	}
 }

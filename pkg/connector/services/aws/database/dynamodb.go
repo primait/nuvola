@@ -13,7 +13,7 @@ import (
 
 // aws iam list-users
 func ListDynamoDBs(cfg aws.Config) (dynamoDBs []*DynamoDB) {
-	var dynamoClient = DynamoClient{Config: cfg}
+	var dynamoClient = DynamoClient{Config: cfg, logger: logging.GetLogManager()}
 
 	for i := range ec2.Regions {
 		cfg.Region = ec2.Regions[i]
@@ -37,9 +37,11 @@ func (dc *DynamoClient) listDynamoDBTablesForRegion() (tableNames []string) {
 		Limit: aws.Int32(100),
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "DynamoDB", "ListTables")
+		dc.logger.Warn("Error on ListTables", "err", re)
 	}
 
-	tableNames = output.TableNames
+	if output != nil {
+		tableNames = output.TableNames
+	}
 	return
 }

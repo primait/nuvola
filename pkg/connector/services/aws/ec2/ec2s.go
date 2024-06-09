@@ -14,7 +14,7 @@ import (
 )
 
 func ListInstances(cfg aws.Config) (ec2s []*Instance, err *awshttp.ResponseError) {
-	ec2Client := EC2Client{Config: cfg, client: ec2.NewFromConfig(cfg)}
+	ec2Client := EC2Client{Config: cfg, client: ec2.NewFromConfig(cfg), logger: logging.GetLogManager()}
 
 	for _, region := range Regions {
 		cfg.Region = region
@@ -34,26 +34,28 @@ func (ec *EC2Client) listInstancesForRegion() (ec2s []*Instance) {
 		}},
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "EC2", "listInstancesForRegion")
+		ec.logger.Warn("Error on listing EC2s in all region", "err", re)
 	}
 
-	ec2s = make([]*Instance, 0, len(output.Reservations))
-	instances := iter.Map(output.Reservations, func(instances *types.Reservation) []*Instance {
-		var instancesSlice []*Instance
-		for _, instance := range instances.Instances {
-			userData := ec.getInstanceUserDataAttribute(aws.ToString(instance.InstanceId))
-			instancesSlice = append(instancesSlice, &Instance{
-				Instance:          instance,
-				UserData:          userData,
-				NetworkInterfaces: ec.getNetworkInterfacesWithGroups(instance.NetworkInterfaces),
-				InstanceState:     ec.getInstanceState(aws.ToString(instance.InstanceId)),
-			})
-		}
-		return instancesSlice
-	})
+	if output != nil {
+		ec2s = make([]*Instance, 0, len(output.Reservations))
+		instances := iter.Map(output.Reservations, func(instances *types.Reservation) []*Instance {
+			var instancesSlice []*Instance
+			for _, instance := range instances.Instances {
+				userData := ec.getInstanceUserDataAttribute(aws.ToString(instance.InstanceId))
+				instancesSlice = append(instancesSlice, &Instance{
+					Instance:          instance,
+					UserData:          userData,
+					NetworkInterfaces: ec.getNetworkInterfacesWithGroups(instance.NetworkInterfaces),
+					InstanceState:     ec.getInstanceState(aws.ToString(instance.InstanceId)),
+				})
+			}
+			return instancesSlice
+		})
 
-	for _, instance := range instances {
-		ec2s = append(ec2s, instance...)
+		for _, instance := range instances {
+			ec2s = append(ec2s, instance...)
+		}
 	}
 	return
 }
@@ -66,7 +68,7 @@ func (ec *EC2Client) getInstanceUserDataAttribute(instanceID string) string {
 		Attribute:  types.InstanceAttributeNameUserData,
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "EC2", "DescribeInstanceAttribute")
+		ec.logger.Warn("Error on describing user data attribute", "err", re)
 	}
 
 	if userData.UserData != nil {
@@ -93,7 +95,7 @@ func (ec *EC2Client) getSecurityGroups(groupID string) (secGroups []types.Securi
 		GroupIds: []string{groupID},
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "EC2", "DescribeSecurityGroups")
+		ec.logger.Warn("Error on describing security groups", "err", re)
 	}
 
 	secGroups = append(secGroups, output.SecurityGroups...)
@@ -105,7 +107,7 @@ func (ec *EC2Client) getInstanceState(instanceID string) (state types.InstanceSt
 		InstanceIds: []string{instanceID},
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "EC2", "DescribeSecurityGroups")
+		ec.logger.Warn("Error on getting EC2 state", "err", re)
 	}
 
 	if output != nil && len(output.InstanceStatuses) > 0 {

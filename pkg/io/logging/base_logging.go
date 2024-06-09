@@ -20,6 +20,10 @@ type LogManager interface {
 	Error(message interface{}, keyvals ...interface{})
 	PrettyJSON(s interface{}) []byte
 	JSON(s interface{}) []byte
+	PrintRed(s string)
+	PrintDarkGreen(s string)
+	PrintGreen(s string)
+	PrintColored(s string, c color.Attribute)
 }
 
 type logManager struct {
@@ -29,13 +33,13 @@ type logManager struct {
 const INDENT_SPACES int = 4
 
 var (
-	logger *logManager
-	once   sync.Once
+	instance *logManager
+	once     sync.Once
 )
 
 func GetLogManager() LogManager {
 	once.Do(func() {
-		logger = &logManager{
+		instance = &logManager{
 			logger: log.NewWithOptions(os.Stdout, log.Options{
 				CallerOffset:    1,
 				Level:           log.WarnLevel,
@@ -46,7 +50,7 @@ func GetLogManager() LogManager {
 		}
 	})
 
-	return logger
+	return instance
 }
 
 func (lm *logManager) SetVerboseLevel() {
@@ -77,10 +81,7 @@ func (lm *logManager) Error(message interface{}, keyvals ...interface{}) {
 func (lm *logManager) PrettyJSON(s interface{}) []byte {
 	data, err := json.MarshalIndent(s, "", strings.Repeat(" ", INDENT_SPACES))
 	if err != nil {
-		if _, ok := err.(*json.UnsupportedTypeError); ok {
-			lm.Error("Tried to Marshal invalid type", "err", err)
-		}
-		lm.Error("Struct does not exist", "err", err)
+		lm.handleJSONError(err)
 	}
 	return data
 }
@@ -88,31 +89,14 @@ func (lm *logManager) PrettyJSON(s interface{}) []byte {
 func (lm *logManager) JSON(s interface{}) []byte {
 	data, err := json.Marshal(s)
 	if err != nil {
-		if _, ok := err.(*json.UnsupportedTypeError); ok {
-			lm.Error("Tried to Marshal invalid type", "err", err)
-		}
-		lm.Error("Struct does not exist", "err", err)
+		lm.handleJSONError(err)
 	}
 	return data
 }
 
-func PrintRed(s string) {
-	_, err := color.New(color.FgHiRed).Println(s)
-	if err != nil {
-		HandleError(err, "Clioutput - PrintRed", "Error on printing colored string")
+func (lm *logManager) handleJSONError(err error) {
+	if _, ok := err.(*json.UnsupportedTypeError); ok {
+		lm.Error("Tried to Marshal invalid type", "err", err)
 	}
-}
-
-func PrintGreen(s string) {
-	_, err := color.New(color.FgHiGreen).Println(s)
-	if err != nil {
-		HandleError(err, "Clioutput - PrintRed", "Error on printing colored string")
-	}
-}
-
-func PrintDarkGreen(s string) {
-	_, err := color.New(color.FgGreen).Println(s)
-	if err != nil {
-		HandleError(err, "Clioutput - PrintRed", "Error on printing colored string")
-	}
+	lm.Error("Struct does not exist", "err", err)
 }
