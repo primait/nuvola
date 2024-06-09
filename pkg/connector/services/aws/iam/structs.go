@@ -9,11 +9,13 @@ import (
 	aat "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 type IAMClient struct {
 	client *iam.Client
 	Config aws.Config
+	logger logging.LogManager
 }
 
 type AAClient struct {

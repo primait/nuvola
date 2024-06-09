@@ -13,9 +13,9 @@ import (
 )
 
 func ListGroups(cfg aws.Config) (groups []*Group) {
-	iamClient = IAMClient{client: iam.NewFromConfig(cfg), Config: cfg}
+	iamClient = IAMClient{client: iam.NewFromConfig(cfg), Config: cfg, logger: logging.GetLogManager()}
 
-	groups = iter.Map(listGroups(), func(group *types.Group) *Group {
+	groups = iter.Map(iamClient.listGroups(), func(group *types.Group) *Group {
 		inlines := iamClient.listInlinePolicies(aws.ToString(group.GroupName), "group")
 		attached := iamClient.listAttachedPolicies(aws.ToString(group.GroupName), "group")
 
@@ -38,19 +38,19 @@ func (ic *IAMClient) listGroupsForUser(identity string) []types.Group {
 		UserName: &identity,
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "IAM - Groups", "ListGroupsForUser")
+		ic.logger.Warn("Error on ListGroupsForUser", "err", re)
 	}
 	return output.Groups
 }
 
-func listGroups() (collectedGroups []types.Group) {
+func (ic *IAMClient) listGroups() (collectedGroups []types.Group) {
 	var marker *string
 	for {
 		output, err := iamClient.client.ListGroups(context.TODO(), &iam.ListGroupsInput{
 			Marker: marker,
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Groups", "ListGroups")
+			ic.logger.Warn("Error on ListGroups", "err", re)
 		}
 
 		collectedGroups = append(collectedGroups, output.Groups...)

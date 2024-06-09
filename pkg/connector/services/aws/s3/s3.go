@@ -18,13 +18,13 @@ import (
 )
 
 func ListBuckets(cfg aws.Config) (buckets []*Bucket) {
-	s3Client := S3Client{Config: cfg, client: s3.NewFromConfig(cfg, func(o *s3.Options) {
+	s3Client := S3Client{Config: cfg, logger: logging.GetLogManager(), client: s3.NewFromConfig(cfg, func(o *s3.Options) {
 		o.UsePathStyle = true
 	})}
 
 	output, err := s3Client.client.ListBuckets(context.TODO(), &s3.ListBucketsInput{})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "S3", "ListBuckets")
+		s3Client.logger.Warn("Error on ListBuckets", "err", re)
 	}
 
 	buckets = iter.Map(output.Buckets, func(bucket *types.Bucket) *Bucket {
@@ -72,7 +72,7 @@ func (sc *S3Client) getBucketPolicy(bucket *string) (policy s3PolicyDocument) {
 	}
 
 	if errors.As(err, &re) {
-		if out := handleErrors(err, retry); out != nil {
+		if out := sc.handleErrors(err, retry); out != nil {
 			output = out.(*s3.GetBucketPolicyOutput)
 		}
 	}
@@ -80,7 +80,7 @@ func (sc *S3Client) getBucketPolicy(bucket *string) (policy s3PolicyDocument) {
 	if output != nil {
 		err := json.Unmarshal([]byte(aws.ToString(output.Policy)), &policy)
 		if err != nil {
-			logging.HandleError(err, "S3", "getBucketPolicy")
+			sc.logger.Warn("Error unmarshalling getBucketPolicy", "err", err)
 		}
 	}
 	return
@@ -106,7 +106,7 @@ func (sc *S3Client) listBucketACL(bucket *string) (grants []types.Grant) {
 	}
 
 	if errors.As(err, &re) {
-		if out := handleErrors(err, retry); out != nil {
+		if out := sc.handleErrors(err, retry); out != nil {
 			output = out.(*s3.GetBucketAclOutput)
 		}
 	}
@@ -137,7 +137,7 @@ func (sc *S3Client) getEncryptionStatus(bucket *string) bool {
 	}
 
 	if errors.As(err, &re) {
-		if out := handleErrors(err, retry); out != nil {
+		if out := sc.handleErrors(err, retry); out != nil {
 			output = out.(*s3.GetBucketEncryptionOutput)
 		}
 	}
@@ -145,7 +145,7 @@ func (sc *S3Client) getEncryptionStatus(bucket *string) bool {
 	return output != nil
 }
 
-func handleErrors(err error, retry func() interface{}) (output interface{}) {
+func (sc *S3Client) handleErrors(err error, retry func() interface{}) (output interface{}) {
 	var re *awshttp.ResponseError
 
 	if errors.As(err, &re) {
@@ -162,7 +162,7 @@ func handleErrors(err error, retry func() interface{}) (output interface{}) {
 				return retry()
 			}
 		default:
-			logging.HandleAWSError(re, "S3", "handleErrors")
+			sc.logger.Warn("Error on S3", "err", re)
 		}
 	}
 	return

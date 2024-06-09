@@ -34,7 +34,7 @@ func InitAWSConfiguration(profile string, awsEndpoint string) (awsc *AWSConfig) 
 	if awsEndpoint != "" {
 		cfg.BaseEndpoint = aws.String(awsEndpoint)
 	}
-	awsc = &AWSConfig{Profile: profile, Config: cfg}
+	awsc = &AWSConfig{Profile: profile, Config: cfg, logger: logging.GetLogManager()}
 	SetActions()
 	// Get the available AWS regions dynamically
 	ec2.ListAndSaveRegions(cfg)
@@ -80,7 +80,7 @@ func (ac *AWSConfig) DumpBuckets() interface{} {
 func (ac *AWSConfig) DumpEC2Instances() interface{} {
 	ec2s, err := ec2.ListInstances(ac.Config)
 	if err != nil {
-		logging.HandleError(err, "EC2", "")
+		ac.logger.Warn("Error listing EC2 instances", "err", err)
 	}
 	return ec2s
 }
@@ -96,7 +96,7 @@ func (ac *AWSConfig) DumpLambdas() interface{} {
 func (ac *AWSConfig) DumpRDS() interface{} {
 	rds, err := database.ListRDS(ac.Config)
 	if err != nil {
-		logging.HandleError(err, "RDS", "")
+		ac.logger.Warn("Error listing RDS", "err", err)
 	}
 	return rds
 }

@@ -17,16 +17,16 @@ import (
 
 // aws iam list-roles and aws iam list-instance-profiles
 func ListRoles(cfg aws.Config) (roles []*Role) {
-	iamClient = IAMClient{Config: cfg, client: iam.NewFromConfig(cfg)}
+	iamClient = IAMClient{Config: cfg, client: iam.NewFromConfig(cfg), logger: logging.GetLogManager()}
 
-	roles = iter.Map(listRoles(), func(role *types.Role) *Role {
+	roles = iter.Map(iamClient.listRoles(), func(role *types.Role) *Role {
 		var assumeRoleDocument = PolicyDocument{}
 		var instanceProfileRef = ""
 		var instanceProfileArn = ""
 		decodedValue, _ := url.QueryUnescape(*role.AssumeRolePolicyDocument)
 		err := json.Unmarshal([]byte(decodedValue), &assumeRoleDocument)
 		if err != nil {
-			logging.HandleError(err, "IAM - Roles", "Umarshalling assumeRoleDocument")
+			iamClient.logger.Warn("Error unmarshalling assumeRoleDocument", "err", err)
 		}
 
 		// Sort Service object in the AssumeRolePolicyDocument; useful to diff different JSON outputs
@@ -55,7 +55,7 @@ func ListRoles(cfg aws.Config) (roles []*Role) {
 		}
 		sort.Strings(assumableBy)
 
-		for _, instanceProfile := range listInstanceProfiles() {
+		for _, instanceProfile := range iamClient.listInstanceProfiles() {
 			for _, r := range instanceProfile.Roles {
 				if aws.ToString(r.RoleId) == aws.ToString(role.RoleId) {
 					instanceProfileRef = aws.ToString(instanceProfile.InstanceProfileId)
@@ -84,7 +84,7 @@ func ListRoles(cfg aws.Config) (roles []*Role) {
 	return
 }
 
-func listRoles() []types.Role {
+func (ic *IAMClient) listRoles() []types.Role {
 	var (
 		marker         *string
 		collectedRoles []types.Role
@@ -96,7 +96,7 @@ func listRoles() []types.Role {
 			MaxItems: aws.Int32(300),
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Roles", "ListRoles")
+			ic.logger.Warn("Error on ListRoles", "err", re)
 		}
 
 		collectedRoles = append(collectedRoles, roleOutput.Roles...)
@@ -108,7 +108,7 @@ func listRoles() []types.Role {
 	return collectedRoles
 }
 
-func listInstanceProfiles() []types.InstanceProfile {
+func (ic *IAMClient) listInstanceProfiles() []types.InstanceProfile {
 	var (
 		marker                    *string
 		collectedInstanceProfiles []types.InstanceProfile
@@ -120,7 +120,7 @@ func listInstanceProfiles() []types.InstanceProfile {
 			MaxItems: aws.Int32(300),
 		})
 		if errors.As(err, &re) {
-			logging.HandleAWSError(re, "IAM - Roles", "ListInstanceProfiles")
+			ic.logger.Warn("Error on ListInstanceProfiles", "err", re)
 		}
 
 		collectedInstanceProfiles = append(collectedInstanceProfiles, roleOutput.InstanceProfiles...)

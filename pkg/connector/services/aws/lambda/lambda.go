@@ -17,7 +17,7 @@ import (
 
 // aws iam list-users
 func ListFunctions(cfg aws.Config) (lambdas []*Lambda) {
-	var lambdaClient = LambdaClient{Config: cfg}
+	var lambdaClient = LambdaClient{Config: cfg, logger: logging.GetLogManager()}
 
 	for i := range ec2.Regions {
 		cfg.Region = ec2.Regions[i]
@@ -32,16 +32,18 @@ func (lc *LambdaClient) listFunctionsForRegion() (lambdas []*Lambda) {
 	output, err := lc.client.ListFunctions(context.TODO(), &lambda.ListFunctionsInput{})
 
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "Lambda", "ListFunctions")
+		lc.logger.Warn("Error on ListFunctions", "err", re)
 	}
 
-	lambdas = iter.Map(output.Functions, func(lambda *types.FunctionConfiguration) *Lambda {
-		return &Lambda{
-			FunctionConfiguration: *lambda,
-			FunctionCodeLocation:  lc.getFunctionCodeLocation(aws.ToString(lambda.FunctionName)),
-			Policy:                lc.getPolicy(aws.ToString(lambda.FunctionName)),
-		}
-	})
+	if output != nil {
+		lambdas = iter.Map(output.Functions, func(lambda *types.FunctionConfiguration) *Lambda {
+			return &Lambda{
+				FunctionConfiguration: *lambda,
+				FunctionCodeLocation:  lc.getFunctionCodeLocation(aws.ToString(lambda.FunctionName)),
+				Policy:                lc.getPolicy(aws.ToString(lambda.FunctionName)),
+			}
+		})
+	}
 	return
 }
 
@@ -50,7 +52,7 @@ func (lc *LambdaClient) getFunctionCodeLocation(name string) types.FunctionCodeL
 		FunctionName: &name,
 	})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "Lambda", "GetFunction")
+		lc.logger.Warn("Error on GetFunction", "err", re)
 	}
 
 	return *output.Code
@@ -64,15 +66,15 @@ func (lc *LambdaClient) getPolicy(name string) (policyDocument lambdaPolicyDocum
 	})
 	if errors.As(err, &re) {
 		if re.HTTPStatusCode() != 404 { // Function can't have a policy
-			logging.HandleAWSError(re, "Lambda", "GetPolicy")
+			lc.logger.Warn("Error on GetPolicy", "err", re)
 		}
 		return policyDocument
 	}
 
-	if output.Policy != nil {
+	if output != nil && output.Policy != nil {
 		err := json.Unmarshal([]byte(aws.ToString(output.Policy)), &policyDocument)
 		if err != nil {
-			logging.HandleError(err, "Lambda", "Umarshalling policyDocument")
+			lc.logger.Warn("Error unmarshalling policyDocument", "err", err)
 		}
 	}
 

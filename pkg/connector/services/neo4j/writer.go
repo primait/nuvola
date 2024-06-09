@@ -10,7 +10,6 @@ import (
 	servicesIAM "github.com/primait/nuvola/pkg/connector/services/aws/iam"
 	servicesLambda "github.com/primait/nuvola/pkg/connector/services/aws/lambda"
 	servicesS3 "github.com/primait/nuvola/pkg/connector/services/aws/s3"
-	"github.com/primait/nuvola/pkg/io/logging"
 
 	"strings"
 
@@ -91,7 +90,7 @@ func (nc *Neo4jClient) createGroup(group servicesIAM.Group) int64 {
 	})
 
 	if err != nil {
-		logging.HandleError(err, "Neo4j - createGroup", fmt.Sprintf("Error on executing query %s", query))
+		nc.logger.Error("Error on executing query", "err", err, "query", query, "arguments", group)
 	}
 	return idGroup.(int64)
 }
@@ -128,7 +127,7 @@ func (nc *Neo4jClient) createPolicyGroup(idGroup int64, policyArn string, name s
 	})
 
 	if err != nil {
-		logging.HandleError(err, "Neo4j - createPolicyGroup", fmt.Sprintf("Error on executing query %s", query))
+		nc.logger.Error("Error on executing query", "err", err, "query", query)
 	}
 	return idPolicy.(int64)
 }
@@ -165,7 +164,7 @@ func (nc *Neo4jClient) createUser(user servicesIAM.User) int64 {
 	})
 
 	if err != nil {
-		logging.HandleError(err, "Neo4j - createUser", fmt.Sprintf("Error on executing query %s", query))
+		nc.logger.Error("Error on executing query", "err", err, "query", query, "arguments", user)
 	}
 
 	for g := 0; g < len(user.Groups); g++ {
@@ -197,7 +196,7 @@ func (nc *Neo4jClient) createUser(user servicesIAM.User) int64 {
 			return result.Consume(context.TODO())
 		})
 		if err != nil {
-			logging.HandleError(err, "Neo4j - createUser", fmt.Sprintf("Error on executing query %s", query))
+			nc.logger.Error("Error on executing query", "err", err, "query", query)
 		}
 	}
 
@@ -236,7 +235,7 @@ func (nc *Neo4jClient) createPolicyUser(idUser int64, policyArn string, name str
 	})
 
 	if err != nil {
-		logging.HandleError(err, "Neo4j - createPolicyUser", fmt.Sprintf("Error on executing query %s", query))
+		nc.logger.Error("Error on executing query", "err", err, "query", query)
 	}
 	return idPolicy.(int64)
 }
@@ -272,7 +271,7 @@ func (nc *Neo4jClient) createRole(role servicesIAM.Role) int64 {
 	})
 
 	if err != nil {
-		logging.HandleError(err, "Neo4j - createRole", fmt.Sprintf("Error on executing query %s", query))
+		nc.logger.Error("Error on executing query", "err", err, "query", query, "arguments", role)
 	}
 	return idRole.(int64)
 }
@@ -309,7 +308,7 @@ func (nc *Neo4jClient) createPolicyRole(idRole int64, policyArn string, name str
 	})
 
 	if err != nil {
-		logging.HandleError(err, "Neo4j - createPolicyRole", fmt.Sprintf("Error on executing query %s", query))
+		nc.logger.Error("Error on executing query", "err", err, "query", query)
 	}
 	return idPolicy.(int64)
 }
@@ -329,7 +328,7 @@ func (nc *Neo4jClient) AddObjects(result map[string]interface{}, query string) {
 	})
 
 	if err != nil {
-		logging.HandleError(err, "Neo4j - AddObjects", fmt.Sprintf("Error on executing query %s", query))
+		nc.logger.Error("Error on executing query", "err", err, "query", query)
 	}
 }
 
@@ -368,7 +367,7 @@ func (nc *Neo4jClient) addLinksToResources(service string, property string) {
 	})
 
 	if err != nil {
-		logging.HandleError(err, "Neo4j - addLinksToResources", fmt.Sprintf("Error on executing query %s", query))
+		nc.logger.Error("Error on executing query", "err", err, "query", query)
 	}
 }
 
@@ -420,7 +419,7 @@ func (nc *Neo4jClient) AddLinksToResourcesIAM() {
 	})
 
 	if err != nil {
-		logging.HandleError(err, "Neo4j - AddLinksToResourcesIAM", fmt.Sprintf("Error on executing query %s with %v", query, out))
+		nc.logger.Error("Error on executing query", "err", err, "query", query)
 	}
 }
 
@@ -448,7 +447,7 @@ func (nc *Neo4jClient) AddEC2(instances *[]servicesEC2.Instance) {
 		MERGE (n)-[:USES]->(role)", {batchSize:10000, parallel:true, iterateList:true})`
 	_, err := session.Run(context.TODO(), linkInstanceProfiles, nil)
 	if err != nil {
-		logging.HandleError(err, "Neo4j - AddEC2", fmt.Sprintf("Error on executing query %s", linkInstanceProfiles))
+		nc.logger.Error("Error on executing query", "err", err, "query", query, "arguments", linkInstanceProfiles)
 	}
 	nc.addLinksToResources("ec2", "InstanceId")
 }
@@ -493,7 +492,7 @@ func (nc *Neo4jClient) AddLambda(lambdas *[]servicesLambda.Lambda) {
 		{batchSize:10000, parallel:true, iterateList:true})`
 	_, err := session.Run(context.TODO(), linkRoles, nil)
 	if err != nil {
-		logging.HandleError(err, "Neo4j - AddLambda", fmt.Sprintf("Error on executing query %s", linkRoles))
+		nc.logger.Error("Error on executing query", "err", err, "query", query, "arguments", linkRoles)
 	}
 
 	linkVpcs := `call apoc.periodic.iterate(
@@ -502,7 +501,7 @@ func (nc *Neo4jClient) AddLambda(lambdas *[]servicesLambda.Lambda) {
 		{batchSize:10000, parallel:true, iterateList:true})`
 	_, err = session.Run(context.TODO(), linkVpcs, nil)
 	if err != nil {
-		logging.HandleError(err, "Neo4j - AddLambda", fmt.Sprintf("Error on executing query %s", linkVpcs))
+		nc.logger.Error("Error on executing query", "err", err, "query", query, "arguments", linkVpcs)
 	}
 	nc.addLinksToResources("lambda", "FunctionName")
 }
@@ -542,6 +541,6 @@ func (nc *Neo4jClient) AddRedshift(redshifts *[]servicesDatabase.RedshiftDB) {
 		{batchSize:10000, parallel:true, iterateList:true})`
 	_, err := session.Run(context.TODO(), linkVpcs, nil)
 	if err != nil {
-		logging.HandleError(err, "Neo4j - AddRedshift", fmt.Sprintf("Error on executing query %s", linkVpcs))
+		nc.logger.Error("Error on executing query", "err", err, "query", query, "arguments", linkVpcs)
 	}
 }

@@ -87,6 +87,7 @@ func processZipFile(connector *connector.StorageConnector, f *zip.File) error {
 
 func assess(connector *connector.StorageConnector, rulesPath string) {
 	// perform checks based on pre-defined static rules
+	logger := logging.GetLogManager()
 	for _, rule := range files.GetFiles(rulesPath, ".ya?ml") {
 		c := yamler.GetConf(rule)
 		if !c.Enabled {
@@ -96,13 +97,13 @@ func assess(connector *connector.StorageConnector, rulesPath string) {
 		query, args := yamler.PrepareQuery(c)
 		results := connector.Query(query, args)
 
-		logging.PrintRed("Running rule: " + rule)
-		logging.PrintGreen("Name: " + c.Name)
-		logging.PrintGreen("Arguments:")
-		logging.PrintDarkGreen(yamler.ArgsToQueryNeo4jBrowser(args))
-		logging.PrintGreen("Query:")
-		logging.PrintDarkGreen(query)
-		logging.PrintGreen("Description: " + c.Description)
+		logger.PrintRed("Running rule: " + rule)
+		logger.PrintGreen("Name: " + c.Name)
+		logger.PrintGreen("Arguments:")
+		logger.PrintDarkGreen(yamler.ArgsToQueryNeo4jBrowser(args))
+		logger.PrintGreen("Query:")
+		logger.PrintDarkGreen(query)
+		logger.PrintGreen("Description: " + c.Description)
 
 		for _, resultMap := range results {
 			for key, value := range resultMap {

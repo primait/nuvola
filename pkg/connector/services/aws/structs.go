@@ -2,6 +2,7 @@ package awsconnector
 
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 // Struct for Policy structured output instead of SDK url-encoded string
@@ -31,6 +32,7 @@ import (
 type AWSConfig struct {
 	Profile string
 	aws.Config
+	logger logging.LogManager
 }
 
 // This is far from perfect: only User, Group, Role and Policy is supported and action with multiple targets are simply "*"

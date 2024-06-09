@@ -14,10 +14,12 @@ import (
 func Whoami(cfg aws.Config) *sts.GetCallerIdentityOutput {
 	var re *http.ResponseError
 
+	logger := logging.GetLogManager()
 	output, err := sts.NewFromConfig(cfg).GetCallerIdentity(context.TODO(), &sts.GetCallerIdentityInput{})
 	if errors.As(err, &re) {
-		logging.HandleAWSError(re, "STS", "GetCallerIdentity")
+		logger.Warn("Error on GetCallerIdentity", "err", re)
 	}
 
+	logger.Info("sts get-caller-identity", "account", aws.ToString(output.Account), "arn", aws.ToString(output.Arn))
 	return output
 }

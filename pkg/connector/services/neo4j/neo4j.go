@@ -2,7 +2,6 @@ package neo4j_connector
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -15,6 +14,7 @@ import (
 type Neo4jClient struct {
 	Driver neo4j.DriverWithContext
 	err    error
+	logger logging.LogManager
 }
 
 var logLevel = log.Level(log.WARNING)
@@ -26,7 +26,7 @@ var useConsoleLogger = func(level log.Level) func(config *config.Config) {
 }
 
 func Connect(url, username, password string) (*Neo4jClient, error) {
-	nc := &Neo4jClient{}
+	nc := &Neo4jClient{logger: logging.GetLogManager()}
 	nc.Driver, nc.err = neo4j.NewDriverWithContext(url, neo4j.BasicAuth(username, password, ""), useConsoleLogger(logLevel), func(c *config.Config) {
 		c.SocketConnectTimeout = 5 * time.Second
 		c.MaxConnectionLifetime = 30 * time.Minute
@@ -116,7 +116,7 @@ func (nc *Neo4jClient) Query(query string, arguments map[string]interface{}) []m
 		return results, result.Err()
 	})
 	if err != nil {
-		logging.HandleError(err, "Neo4j - Query", fmt.Sprintf("Error on executing query %s with %s", query, arguments))
+		nc.logger.Warn("Error on executing query", "err", err, "query", query, "arguments", arguments)
 	}
 
 	return results.([]map[string]interface{})
