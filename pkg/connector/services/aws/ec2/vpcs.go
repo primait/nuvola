@@ -6,10 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/primait/nuvola/pkg/io/logging"
 )
 
 func ListVpcs(cfg aws.Config) (vpcs *VPC) {
-	ec2Client := EC2Client{Config: cfg, client: ec2.NewFromConfig(cfg)}
+	ec2Client := EC2Client{Config: cfg, client: ec2.NewFromConfig(cfg), logger: logging.GetLogManager()}
 
 	vpcs = &VPC{}
 	for _, region := range Regions {

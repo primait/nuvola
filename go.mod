@@ -19,7 +19,6 @@ require (
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/imroc/req/v3 v3.43.7
 	github.com/itchyny/gojq v0.12.16
-	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.20.0
 	github.com/notdodo/arner v0.0.0-20230222134658-4fe417a6cc9c
 	github.com/notdodo/goflat/v2 v2.1.1
@@ -69,7 +68,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/onsi/ginkgo/v2 v2.19.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
