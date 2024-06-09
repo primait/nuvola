@@ -31,9 +31,9 @@ func InitAWSConfiguration(profile string, awsEndpoint string) (awsc *AWSConfig) 
 		}),
 	)
 	cfg.RetryMode = aws.RetryModeStandard
-	// if awsEndpoint != "" {
-	// 	cfg.BaseEndpoint = aws.String(awsEndpoint)
-	// }
+	if awsEndpoint != "" {
+		cfg.BaseEndpoint = aws.String(awsEndpoint)
+	}
 	awsc = &AWSConfig{Profile: profile, Config: cfg, logger: logging.GetLogManager()}
 	SetActions()
 	// Get the available AWS regions dynamically
