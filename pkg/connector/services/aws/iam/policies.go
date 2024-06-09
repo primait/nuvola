@@ -202,7 +202,6 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 		ic.logger.Warn("no user/role/group defined", "object", object)
 	}
 
-	fmt.Println("Asdfasd")
 	for _, policy := range output {
 		policyVersions := ic.listPolicyVersions(policy.PolicyArn)
 		policyDocument, errj := json.Marshal(policyVersions[0].Document)

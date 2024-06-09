@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/primait/nuvola/pkg/connector/services/aws/ec2"
+	"github.com/primait/nuvola/pkg/io/logging"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
@@ -14,7 +15,7 @@ import (
 
 // aws iam list-users
 func ListRDS(cfg aws.Config) (rdsRet *RDS, re *awshttp.ResponseError) {
-	var rdsClient = RDSClient{Config: cfg}
+	var rdsClient = RDSClient{Config: cfg, logger: logging.GetLogManager()}
 
 	rdsRet = &RDS{}
 

@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -64,30 +65,40 @@ func runDumpCmd(cmd *cobra.Command, args []string) {
 func dumpData(storageConnector *connector.StorageConnector, cloudConnector *connector.CloudConnector) {
 	dataChan := make(chan map[string]interface{})
 	var wg sync.WaitGroup
-	wg.Add(1)
+
 	go func() {
-		cloudConnector.DumpAll("aws", dataChan, &wg)
 		defer close(dataChan)
+		cloudConnector.DumpAll("aws", dataChan)
 	}()
 
-	for data := range dataChan {
-		processData(data, storageConnector)
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for data := range dataChan {
+			processData(storageConnector, data)
+		}
+	}()
 	wg.Wait()
 }
 
-func processData(data map[string]interface{}, storageConnector *connector.StorageConnector) {
-	for key, value := range data {
-		obj, err := json.Marshal(value)
-		if err != nil {
-			logger.Error("Error marshalling output", "err", err)
-			continue
-		}
-		if storageConnector != nil {
-			storageConnector.ImportResults(key, obj)
-		}
-		AWSResults[key] = value
+func processData(storageConnector *connector.StorageConnector, data map[string]interface{}) {
+	if len(data) == 0 {
+		return
 	}
+
+	v := reflect.ValueOf(data)
+	if v.Kind() != reflect.Map || v.Len() == 0 {
+		logger.Error("processData: unexpected data format")
+	}
+
+	mapKey := v.MapKeys()[0].Interface().(string)
+	obj, err := json.Marshal(data[mapKey])
+	if err != nil {
+		logger.Error("processData: error marshalling output", "err", err)
+	}
+
+	storageConnector.ImportResults(mapKey, obj)
+	AWSResults[mapKey] = data[mapKey]
 }
 
 func saveResults(awsProfile, outputDir, outputFormat string) {

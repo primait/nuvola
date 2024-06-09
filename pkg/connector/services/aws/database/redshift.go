@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/primait/nuvola/pkg/connector/services/aws/ec2"
+	"github.com/primait/nuvola/pkg/io/logging"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
@@ -13,7 +14,7 @@ import (
 
 // aws iam list-users
 func ListRedshiftDBs(cfg aws.Config) (redshiftDBs []*RedshiftDB) {
-	var redshiftClient = RedshiftClient{Config: cfg}
+	var redshiftClient = RedshiftClient{Config: cfg, logger: logging.GetLogManager()}
 
 	for i := range ec2.Regions {
 		cfg.Region = ec2.Regions[i]
