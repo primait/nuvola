@@ -97,7 +97,9 @@ func processData(storageConnector *connector.StorageConnector, data map[string]i
 		logger.Error("processData: error marshalling output", "err", err)
 	}
 
-	storageConnector.ImportResults(mapKey, obj)
+	if storageConnector != nil {
+		storageConnector.ImportResults(mapKey, obj)
+	}
 	AWSResults[mapKey] = data[mapKey]
 }
 
