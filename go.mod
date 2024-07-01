@@ -3,28 +3,28 @@ module github.com/primait/nuvola
 go 1.21
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.27.2
-	github.com/aws/aws-sdk-go-v2/config v1.27.18
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.8
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.8
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.163.1
-	github.com/aws/aws-sdk-go-v2/service/iam v1.32.6
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.6
-	github.com/aws/aws-sdk-go-v2/service/rds v1.79.6
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.6
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.55.1
-	github.com/aws/aws-sdk-go-v2/service/sts v1.28.12
+	github.com/aws/aws-sdk-go-v2 v1.30.1
+	github.com/aws/aws-sdk-go-v2/config v1.27.23
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.1
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.167.1
+	github.com/aws/aws-sdk-go-v2/service/iam v1.34.1
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.56.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.81.2
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.57.1
+	github.com/aws/aws-sdk-go-v2/service/sts v1.30.1
 	github.com/charmbracelet/log v0.4.0
 	github.com/fatih/color v1.17.0
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/imroc/req/v3 v3.43.7
 	github.com/itchyny/gojq v0.12.16
-	github.com/neo4j/neo4j-go-driver/v5 v5.20.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.22.0
 	github.com/notdodo/arner v0.0.0-20230222134658-4fe417a6cc9c
 	github.com/notdodo/goflat/v2 v2.1.1
-	github.com/ohler55/ojg v1.22.0
+	github.com/ohler55/ojg v1.22.1
 	github.com/sourcegraph/conc v0.3.0
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	golang.org/x/text v0.16.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -32,21 +32,21 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
-	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.18 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.5 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.9 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.9 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.3 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.23 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.9 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.13 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.13 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.20.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.24.5 // indirect
-	github.com/aws/smithy-go v1.20.2 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.13 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.15 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.14 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.15 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.13 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.22.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.1 // indirect
+	github.com/aws/smithy-go v1.20.3 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/lipgloss v0.11.0 // indirect
 	github.com/charmbracelet/x/ansi v0.1.2 // indirect
