@@ -1,5 +1,6 @@
 variable "name" {
   description = "the name of the stack, e.g. \"test\""
+  default     = "nuvola-test"
 }
 
 variable "region" {
