@@ -6,18 +6,21 @@ terraform {
   }
 }
 
+locals {
+  default_tags = {
+    Environment = "test"
+    Owner       = "primait"
+    Project     = "nuvola"
+  }
+}
+
 provider "aws" {
   access_key = "test"
   secret_key = "test"
   region     = "eu-west-1"
   default_tags {
-    tags = {
-      Environment = "test"
-      Owner       = "primait"
-      Project     = "nuvola"
-    }
+    tags = local.default_tags
   }
-
 }
 
 provider "aws" {
@@ -26,11 +29,7 @@ provider "aws" {
   region     = "us-east-1"
   alias      = "us_east_1"
   default_tags {
-    tags = {
-      Environment = "test"
-      Owner       = "primait"
-      Project     = "nuvola"
-    }
+    tags = local.default_tags
   }
 }
 
