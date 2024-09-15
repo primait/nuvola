@@ -44,7 +44,7 @@ func ListAndSaveRegions(cfg aws.Config) {
 	if len(Regions) == 0 {
 		ec2Client := ec2.NewFromConfig(cfg)
 
-		output, err := ec2Client.DescribeRegions(context.TODO(), &ec2.DescribeRegionsInput{})
+		output, err := ec2Client.DescribeRegions(context.TODO(), &ec2.DescribeRegionsInput{AllRegions: aws.Bool(false)})
 		if errors.As(err, &re) || output == nil {
 			logging.GetLogManager().Warn("Error on listing regions", "err", err)
 		} else {
