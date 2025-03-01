@@ -53,8 +53,8 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         # v4.2.2
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@e0cca6fe95306b7e7790d6f1bf6a7bec6d622459
-        # V.2.22.0
+        uses: securego/gosec@43fee884f668c23601e0bec7a8c095fba226f889
+        # V.2.22.1
         with:
           args: "-exclude-dir=assets -no-fail -fmt sarif -out results.sarif ./..."
       - name: Upload SARIF file
