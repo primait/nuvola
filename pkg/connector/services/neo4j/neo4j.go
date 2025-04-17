@@ -45,7 +45,11 @@ func (nc *Neo4jClient) NewSession() neo4j.SessionWithContext {
 //nolint:all
 func (nc *Neo4jClient) DeleteAll() {
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 
 	session.Run(context.TODO(), `call apoc.periodic.commit("MATCH (n) WITH n LIMIT $limit DETACH DELETE n RETURN count(*)", {limit:20000})`, nil) // #nosec G104
 	session.Run(context.TODO(), "CALL apoc.schema.assert({},{})", nil)                                                                            // #nosec G104
@@ -87,7 +91,11 @@ func (nc *Neo4jClient) DeleteAll() {
 
 func (nc *Neo4jClient) Query(query string, arguments map[string]interface{}) []map[string]interface{} {
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 
 	results, err := session.ExecuteWrite(context.TODO(), func(tx neo4j.ManagedTransaction) (any, error) {
 		result, err := tx.Run(context.TODO(), query, arguments)

@@ -47,7 +47,11 @@ func importZipFile(connector *connector.StorageConnector, zipfile string) {
 	orderedFiles := make([]*zip.File, len(ordering))
 
 	r := unzip.UnzipInMemory(zipfile)
-	defer r.Close()
+	defer func() {
+		if err := r.Close(); err != nil {
+			logger.Error("failed to close r: %v", err)
+		}
+	}()
 
 	for _, f := range r.File {
 		for ord := range ordering {
@@ -73,7 +77,11 @@ func processZipFile(connector *connector.StorageConnector, f *zip.File) error {
 	if err != nil {
 		return fmt.Errorf("opening content of ZIP: %w", err)
 	}
-	defer rc.Close()
+	defer func() {
+		if err := rc.Close(); err != nil {
+			logger.Error("failed to close r: %v", err)
+		}
+	}()
 
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, rc) // #nosecG110

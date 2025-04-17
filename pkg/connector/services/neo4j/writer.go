@@ -69,7 +69,11 @@ func (nc *Neo4jClient) AddRoles(roles *[]servicesIAM.Role) {
 
 func (nc *Neo4jClient) createGroup(group servicesIAM.Group) int64 {
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 	query := `MERGE (g:IAM:Group {GroupName: $GroupName, CreateDate: $CreateDate, Arn: $Arn, Path: $Path, GroupId: $GroupId}) RETURN id(g)`
 
 	idGroup, err := session.ExecuteWrite(context.TODO(), func(tx neo4j.ManagedTransaction) (any, error) {
@@ -97,16 +101,21 @@ func (nc *Neo4jClient) createGroup(group servicesIAM.Group) int64 {
 
 func (nc *Neo4jClient) createPolicyGroup(idGroup int64, policyArn string, name string, policyType string) int64 {
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 	query := `%s
 		WITH policy
 		MATCH (g:IAM:Group) WHERE id(g) = $idGroup
 		MERGE (g)-[:HAS_POLICY]->(policy)
 		RETURN id(policy)`
 
-	if policyType == "attached" {
+	switch policyType {
+	case "attached":
 		query = fmt.Sprintf(query, `CALL apoc.merge.node(["Policy", "Attached"], {Name: $Name, Type: $Type, Arn: $PolicyArn}) YIELD node AS policy`)
-	} else if policyType == "inline" {
+	case "inline":
 		query = fmt.Sprintf(query, `CALL apoc.create.node(["Policy", "Inline"], {Name: $Name, Type: $Type}) YIELD node AS policy`)
 	}
 
@@ -144,7 +153,11 @@ func (nc *Neo4jClient) createUser(user servicesIAM.User) int64 {
 		RETURN id(u)`
 
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 	idUser, err := session.ExecuteWrite(context.TODO(), func(tx neo4j.ManagedTransaction) (any, error) {
 		var result, err = tx.Run(context.TODO(), query, map[string]interface{}{
 			"UserName":            user.UserName,
@@ -171,7 +184,11 @@ func (nc *Neo4jClient) createUser(user servicesIAM.User) int64 {
 		groupNames = append(groupNames, aws.ToString(user.Groups[g].GroupName))
 
 		session := nc.NewSession()
-		defer session.Close(context.TODO())
+		defer func() {
+			if err := session.Close(context.TODO()); err != nil {
+				nc.logger.Error("failed to close session: %v", err)
+			}
+		}()
 		queryGroup := `MATCH (g:Group {GroupName: $GroupName, CreateDate: $CreateDate, Arn: $Arn, GroupId: $GroupId, Path: $Path}) WITH g
 					   MATCH (u:User {Arn: $uArn})
 					   SET u.Groups = $groups
@@ -205,16 +222,21 @@ func (nc *Neo4jClient) createUser(user servicesIAM.User) int64 {
 
 func (nc *Neo4jClient) createPolicyUser(idUser int64, policyArn string, name string, policyType string) int64 {
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 	query := `%s
 		WITH policy
 		MATCH (u:IAM:User) WHERE id(u) = $idUser
 		MERGE (u)-[r:HAS_POLICY]->(policy)
 		RETURN id(policy)`
 
-	if policyType == "attached" {
+	switch policyType {
+	case "attached":
 		query = fmt.Sprintf(query, `CALL apoc.merge.node(["Policy", "Attached", "IAM"], {Name: $Name, Type: $Type, Arn: $PolicyArn}) YIELD node AS policy`)
-	} else if policyType == "inline" {
+	case "inline":
 		query = fmt.Sprintf(query, `CALL apoc.create.node(["Policy", "Inline", "IAM"], {Name: $Name, Type: $Type}) YIELD node AS policy`)
 	}
 
@@ -242,7 +264,11 @@ func (nc *Neo4jClient) createPolicyUser(idUser int64, policyArn string, name str
 
 func (nc *Neo4jClient) createRole(role servicesIAM.Role) int64 {
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 	query := ""
 	if role.InstanceProfileID != "" {
 		query = `MERGE (r:IAM:Role:InstanceProfile {RoleName: $RoleName, Arn: $Arn, Path: $Path, Description: $Description, RoleId: $RoleId, InstanceProfileArn: $InstanceProfileArn, IamInstanceProfileId: $IamInstanceProfileId, AssumableBy: $AssumableBy}) RETURN id(r)`
@@ -278,16 +304,21 @@ func (nc *Neo4jClient) createRole(role servicesIAM.Role) int64 {
 
 func (nc *Neo4jClient) createPolicyRole(idRole int64, policyArn string, name string, policyType string) int64 {
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 	query := `%s
 		WITH policy
 		MATCH (u:Role) WHERE id(u) = $idRole
 		MERGE (u)-[r:HAS_POLICY]->(policy)
 		RETURN id(policy)`
 
-	if policyType == "attached" {
+	switch policyType {
+	case "attached":
 		query = fmt.Sprintf(query, `CALL apoc.merge.node(["Policy", "Attached", "IAM"], {Name: $Name, Type: $Type, Arn: $PolicyArn}) YIELD node AS policy`)
-	} else if policyType == "inline" {
+	case "inline":
 		query = fmt.Sprintf(query, `CALL apoc.create.node(["Policy", "Inline", "IAM"], {Name: $Name, Type: $Type}) YIELD node AS policy`)
 	}
 
@@ -315,7 +346,11 @@ func (nc *Neo4jClient) createPolicyRole(idRole int64, policyArn string, name str
 
 func (nc *Neo4jClient) AddObjects(result map[string]interface{}, query string) {
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 
 	_, err := session.ExecuteWrite(context.TODO(), func(tx neo4j.ManagedTransaction) (any, error) {
 		var result, err = tx.Run(context.TODO(), query, result)
@@ -334,7 +369,11 @@ func (nc *Neo4jClient) AddObjects(result map[string]interface{}, query string) {
 
 func (nc *Neo4jClient) addLinksToResources(service string, property string) {
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 	actionResourceRelations = uniqueActionsResources(&actionResourceRelations)
 	// Filter only related service relationships
 	var out []map[string]string
@@ -373,7 +412,11 @@ func (nc *Neo4jClient) addLinksToResources(service string, property string) {
 
 func (nc *Neo4jClient) AddLinksToResourcesIAM() {
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 	// #nosec
 	session.Run(context.TODO(), "CALL db.awaitIndexes(3000)", nil) //nolint:all
 
@@ -438,7 +481,11 @@ func (nc *Neo4jClient) AddEC2(instances *[]servicesEC2.Instance) {
 	nc.AddObjects(flatObjects(*instances), query)
 
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 
 	linkInstanceProfiles := `call apoc.periodic.iterate("
 		MATCH (role:Role) WHERE role.InstanceProfileArn <> '' RETURN role",
@@ -484,7 +531,11 @@ func (nc *Neo4jClient) AddLambda(lambdas *[]servicesLambda.Lambda) {
 	nc.AddObjects(flatObjects(*lambdas), query)
 
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 
 	linkRoles := `call apoc.periodic.iterate(
 		"MATCH (role:Role) RETURN role",
@@ -534,7 +585,11 @@ func (nc *Neo4jClient) AddRedshift(redshifts *[]servicesDatabase.RedshiftDB) {
 	nc.addLinksToResources("redshift", "DBName")
 
 	session := nc.NewSession()
-	defer session.Close(context.TODO())
+	defer func() {
+		if err := session.Close(context.TODO()); err != nil {
+			nc.logger.Error("failed to close session: %v", err)
+		}
+	}()
 	linkVpcs := `call apoc.periodic.iterate(
 		"MATCH (r:Redshift) WHERE r.VpcId <> '' MATCH (v:Vpc) WHERE v.VpcId = r.VpcId RETURN r, v",
 		"MERGE (r)-[:NETWORK]->(v)",
