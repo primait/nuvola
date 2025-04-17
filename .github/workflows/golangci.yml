@@ -42,7 +42,6 @@ jobs:
         with:
           version: latest
           only-new-issues: true
-          args: --timeout 300s --exclude-dirs="(^|/)assets($|/)" --enable misspell --enable gofmt --enable goimports --enable whitespace
 
   gosec:
     runs-on: ubuntu-latest

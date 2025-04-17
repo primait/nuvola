@@ -14,7 +14,7 @@ import (
 func Zip(path string, profile string, values map[string]interface{}) {
 	logger := logging.GetLogManager()
 	today := time.Now().Format("20060102")
-	profile = filepath.Clean(strings.Replace(profile, string(filepath.Separator), "-", -1))
+	profile = filepath.Clean(strings.ReplaceAll(profile, string(filepath.Separator), "-"))
 	filePtr, err := os.Create(
 		filepath.Join(
 			filepath.Clean(path),

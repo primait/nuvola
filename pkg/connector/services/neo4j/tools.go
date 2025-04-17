@@ -100,7 +100,11 @@ func (nc *Neo4jClient) createPolicyRelationships(idPolicy int64, statements *[]s
 
 	if actions["actions"] != nil {
 		session := nc.NewSession()
-		defer session.Close(context.TODO())
+		defer func() {
+			if err := session.Close(context.TODO()); err != nil {
+				nc.logger.Error("failed to close session: %v", err)
+			}
+		}()
 		_, err := session.ExecuteWrite(context.TODO(), func(tx neo4j.ManagedTransaction) (any, error) {
 			linkPolicy := `UNWIND $actions AS actions
 				MATCH (p:Policy) WHERE id(p) = toInteger(actions.policy)

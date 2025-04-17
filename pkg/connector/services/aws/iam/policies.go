@@ -46,8 +46,8 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 		inline                []PolicyDocument
 	)
 
-	switch {
-	case object == "role":
+	switch object {
+	case "role":
 		var attachedPolicies *iam.ListRolePoliciesOutput
 		attachedPolicies, err := ic.client.ListRolePolicies(context.TODO(), &iam.ListRolePoliciesInput{
 			RoleName: &identity,
@@ -56,7 +56,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 			ic.logger.Warn("Error on ListRolePolicies", "err", re)
 		}
 		policies = attachedPolicies.PolicyNames
-	case object == "user":
+	case "user":
 		var attachedPolicies *iam.ListUserPoliciesOutput
 		attachedPolicies, err := ic.client.ListUserPolicies(context.TODO(), &iam.ListUserPoliciesInput{
 			UserName: &identity,
@@ -65,7 +65,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 			ic.logger.Warn("Error on ListUserPolicies", "err", re)
 		}
 		policies = attachedPolicies.PolicyNames
-	case object == "group":
+	case "group":
 		var attachedPolicies *iam.ListGroupPoliciesOutput
 		attachedPolicies, err := ic.client.ListGroupPolicies(context.TODO(), &iam.ListGroupPoliciesInput{
 			GroupName: &identity,
@@ -79,8 +79,8 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 	}
 
 	for i := range policies {
-		switch {
-		case object == "role":
+		switch object {
+		case "role":
 			var inlinePolicy *iam.GetRolePolicyOutput
 			inlinePolicy, err := ic.client.GetRolePolicy(context.TODO(), &iam.GetRolePolicyInput{
 				PolicyName: &policies[i],
@@ -90,7 +90,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 				ic.logger.Warn("Error on GetRolePolicy", "err", re)
 			}
 			decodedValue, _ = url.QueryUnescape(*inlinePolicy.PolicyDocument)
-		case object == "user":
+		case "user":
 			var inlinePolicy *iam.GetUserPolicyOutput
 			inlinePolicy, err := ic.client.GetUserPolicy(context.TODO(), &iam.GetUserPolicyInput{
 				PolicyName: &policies[i],
@@ -100,7 +100,7 @@ func (ic *IAMClient) listInlinePolicies(identity string, object string) []Policy
 				ic.logger.Warn("Error on GetUserPolicy", "err", re)
 			}
 			decodedValue, _ = url.QueryUnescape(*inlinePolicy.PolicyDocument)
-		case object == "group":
+		case "group":
 			var inlinePolicy *iam.GetGroupPolicyOutput
 			inlinePolicy, err := ic.client.GetGroupPolicy(context.TODO(), &iam.GetGroupPolicyInput{
 				PolicyName: &policies[i],
@@ -170,8 +170,8 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 		output []types.AttachedPolicy
 	)
 
-	switch {
-	case object == "role":
+	switch object {
+	case "role":
 		var attachedPolicies *iam.ListAttachedRolePoliciesOutput
 		attachedPolicies, err := ic.client.ListAttachedRolePolicies(context.TODO(), &iam.ListAttachedRolePoliciesInput{
 			RoleName: &identity,
@@ -180,7 +180,7 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 			ic.logger.Warn("Error on ListAttachedRolePolicies", "err", re)
 		}
 		output = attachedPolicies.AttachedPolicies
-	case object == "user":
+	case "user":
 		var attachedPolicies *iam.ListAttachedUserPoliciesOutput
 		attachedPolicies, err := ic.client.ListAttachedUserPolicies(context.TODO(), &iam.ListAttachedUserPoliciesInput{
 			UserName: &identity,
@@ -189,7 +189,7 @@ func (ic *IAMClient) listAttachedPolicies(identity string, object string) (attac
 			ic.logger.Warn("Error on ListAttachedUserPolicies", "err", re)
 		}
 		output = attachedPolicies.AttachedPolicies
-	case object == "group":
+	case "group":
 		var attachedPolicies *iam.ListAttachedGroupPoliciesOutput
 		attachedPolicies, err := ic.client.ListAttachedGroupPolicies(context.TODO(), &iam.ListAttachedGroupPoliciesInput{
 			GroupName: &identity,
