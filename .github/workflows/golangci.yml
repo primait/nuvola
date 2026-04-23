@@ -30,15 +30,15 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        # v4.2.2
-      - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b
-        # v5.4.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        # v6.0.2
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        # v6.4.0
         with:
           go-version: "oldstable"
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd
-        # v7.0.0
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20
+        # v9.2.0
         with:
           version: latest
           only-new-issues: true
@@ -49,11 +49,11 @@ jobs:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        # v6.0.2
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@136f6c00402b11775d4f4a45d5a21e2f6dd99db2
-        # V.2.22.2
+        uses: securego/gosec@223e19b8856e00f02cc67804499a83f77e208f3c
+        # V.2.25.0
         with:
           args: "-exclude-dir=assets -no-fail -fmt sarif -out results.sarif ./..."
       - name: Upload SARIF file
@@ -68,10 +68,10 @@ jobs:
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        # v4.2.2
-      - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b
-        # v5.4.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        # v6.0.2
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        # v6.4.0
         with:
           go-version-file: "go.mod"
           cache-dependency-path: |
