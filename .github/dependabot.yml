@@ -26,3 +26,7 @@ updates:
       interval: monthly
       time: "12:00"
       day: wednesday
+    groups:
+      nuvola-actions:
+        patterns:
+          - "*"
