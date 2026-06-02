@@ -37,8 +37,8 @@ jobs:
         with:
           go-version: "oldstable"
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20
-        # v9.2.0
+        uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee
+        # v9.2.1
         with:
           version: latest
           only-new-issues: true
@@ -52,8 +52,8 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         # v6.0.2
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@223e19b8856e00f02cc67804499a83f77e208f3c
-        # V.2.25.0
+        uses: securego/gosec@9e6a9843d7a4a6e3e9a8539b02612c8a4aa3f889
+        # V.2.27.1
         with:
           args: "-exclude-dir=assets -no-fail -fmt sarif -out results.sarif ./..."
       - name: Upload SARIF file
