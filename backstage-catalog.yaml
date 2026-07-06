@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "nuvola"
+  description: "nuvola"
+spec:
+  type: "service"
+  lifecycle: production
+  owner: "group:default/team-security-engineering"
+  system: prima.it
