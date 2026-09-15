@@ -1,0 +1,11 @@
+name: Cleanup caches by a branch
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  cleanup:
+    permissions:
+      actions: write
+    uses: notdodo/github-actions/.github/workflows/clean-branch-cache.yml@cleanup-v0

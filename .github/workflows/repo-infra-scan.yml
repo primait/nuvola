@@ -1,0 +1,28 @@
+name: Security Scan
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ghas-security-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  infra-scan:
+    permissions:
+      contents: read
+      pull-requests: write
+      security-events: write
+    uses: notdodo/github-actions/.github/workflows/infra-security-scan.yml@infra-scan-v0
+  sast:
+    permissions:
+      contents: read
+      pull-requests: write
+      security-events: write
+    uses: notdodo/github-actions/.github/workflows/sast.yml@sast-v0
+    secrets:
+      semgrep_app_token: ${{ secrets.SEMGREP_APP_TOKEN }}
